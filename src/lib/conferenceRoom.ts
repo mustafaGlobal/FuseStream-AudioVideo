@@ -34,14 +34,6 @@ class ConferenceRoom {
     this.room = room;
     this.roomId = roomId;
   }
-
-  async init() {
-    try {
-      this.router = await createMediasoupRouter();
-    } catch (error) {
-      throw error;
-    }
-  }
 }
 
 export { ConferenceRoom };
