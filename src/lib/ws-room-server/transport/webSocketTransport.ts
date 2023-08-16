@@ -3,7 +3,7 @@ import { createLogger } from '../../logger';
 import SafeEventEmitter from '../utils/safeEventEmitter';
 import { Message } from './message';
 
-const logger = createLogger('WebSocketTransport');
+const logger = createLogger('transport:web-socket-transport');
 
 class WebSocketTransport extends SafeEventEmitter {
   private ws: WebSocket;

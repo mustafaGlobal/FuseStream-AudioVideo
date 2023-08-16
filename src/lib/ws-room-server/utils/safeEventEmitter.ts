@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { createLogger } from '../../logger';
 
-const logger = createLogger('SafeEventEmitter');
+const logger = createLogger('safe-event-emmiter');
 
 class SafeEventEmitter extends EventEmitter {
   constructor() {

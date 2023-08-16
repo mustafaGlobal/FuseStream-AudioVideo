@@ -3,12 +3,16 @@ import cors from 'cors';
 import http from 'http';
 import url from 'node:url';
 
+import { createLogger } from './lib/logger';
+
 import {
   WebSocketServer,
   Room,
   Message,
   WebSocketTransport,
 } from './lib/ws-room-server';
+
+const logger = createLogger('main');
 
 let Rooms: Map<String, Room> = new Map();
 
@@ -31,7 +35,6 @@ const main = async () => {
       const room = Rooms.get(roomId);
       if (room) {
         if (room.hasPeer(peerId)) {
-          console.log('Peer already joined');
           transport.close();
         } else {
           console.log('Peer joined');
@@ -51,7 +54,7 @@ const main = async () => {
 
   const port = 8000;
   httpServer.listen(port, () => {
-    console.log(`Audio/Video conference server listening on port:${port}`);
+    logger.info(`Audio/Video conference server listening on port:${port}`);
   });
 };
 

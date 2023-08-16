@@ -12,7 +12,7 @@ import type {
 import { MsgType } from '../types';
 import { WebSocketTransport } from '../transport/webSocketTransport';
 
-const logger = createLogger('Peer');
+const logger = createLogger('peer');
 
 class Peer extends SafeEventEmitter {
   private transport: WebSocketTransport;

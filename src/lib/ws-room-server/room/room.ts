@@ -3,7 +3,7 @@ import { Peer } from './peer';
 import { createLogger } from '../../logger';
 import { WebSocketTransport } from '../transport/webSocketTransport';
 
-const logger = createLogger('Room');
+const logger = createLogger('room');
 
 class Room extends SafeEventEmitter {
   private closed: boolean;

@@ -2,7 +2,7 @@ import debug from 'debug';
 
 // Create a function that returns a logger based on the provided namespace
 export function createLogger(namespace: string) {
-  const logger = debug(namespace);
+  const logger = debug(`streamFuse:${namespace}`);
 
   // Enable debugging based on environment
   if (process.env.NODE_ENV !== 'production') {

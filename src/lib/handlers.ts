@@ -15,8 +15,5 @@ const handleCreateTransport = async (ws: WebSocket, event: any) => {
 };
 
 const handleConnectTransport = async (ws: WebSocket, event: any) => {
-  console.log('handleConnectTransport');
-  console.log(event);
-
   const transport = producerTransport.get(event.data.producerId);
 };

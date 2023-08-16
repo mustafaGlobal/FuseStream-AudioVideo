@@ -11,9 +11,7 @@ import {
   NotificationMethod,
 } from '../types';
 
-import WebSocket from 'ws';
-
-const logger = createLogger('Message');
+const logger = createLogger('transport:message');
 
 class Message {
   static parse(raw: any): WebSocketMessage | undefined {

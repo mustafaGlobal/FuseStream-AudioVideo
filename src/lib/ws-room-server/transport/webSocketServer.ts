@@ -4,7 +4,7 @@ import WebSocket, { Server } from 'ws';
 import { WebSocketTransport } from './webSocketTransport';
 import SafeEventEmitter from '../utils/safeEventEmitter';
 
-const logger = createLogger('WebSocketServer');
+const logger = createLogger('transport:web-socket-server');
 
 class WebSocketServer extends SafeEventEmitter {
   private wsServer: Server;
