@@ -34,6 +34,14 @@ class ConferenceRoom {
     this.room = room;
     this.roomId = roomId;
   }
+
+  public getId(): string {
+    return this.roomId;
+  }
+
+  public getRoom(): Room {
+    return this.room;
+  }
 }
 
 export { ConferenceRoom };

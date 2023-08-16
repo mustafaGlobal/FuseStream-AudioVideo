@@ -11,10 +11,14 @@ import {
   Message,
   WebSocketTransport,
 } from './lib/ws-room-server';
+import { WorkerPool } from './lib/workerPool';
+import { config } from './config';
+import { ConferenceRoom } from './lib/conferenceRoom';
+import { Worker } from 'mediasoup/node/lib/types';
 
 const logger = createLogger('main');
 
-let Rooms: Map<String, Room> = new Map();
+let Conferences: Map<String, ConferenceRoom> = new Map();
 
 const main = async () => {
   const app = express();
@@ -22,9 +26,13 @@ const main = async () => {
   const httpServer = http.createServer(app);
   const wsServer = new WebSocketServer(httpServer);
 
+  const Workers: WorkerPool = await WorkerPool.create(
+    config.mediasoup.numWorkers
+  );
+
   // Create a hardcoded room for testing
-  const room = new Room('test');
-  Rooms.set(room.getRoomId(), room);
+  let testConference = await ConferenceRoom.create(Workers.getWorker(), 'test');
+  Conferences.set('test', testConference);
 
   wsServer.on('connection', (event) => {
     const { requestUrl, transport } = event;
@@ -32,14 +40,14 @@ const main = async () => {
     const roomId = u.query.roomId;
     const peerId = u.query.peerId;
     if (typeof roomId == 'string' && typeof peerId == 'string') {
-      const room = Rooms.get(roomId);
-      if (room) {
-        if (room.hasPeer(peerId)) {
+      const conference = Conferences.get(roomId);
+      if (conference) {
+        if (conference.getRoom().hasPeer(peerId)) {
           transport.close();
         } else {
           console.log('Peer joined');
-          room.addPeer(peerId, transport);
-          let peer = room.getPeer(peerId);
+          conference.getRoom().addPeer(peerId, transport);
+          let peer = conference.getRoom().getPeer(peerId);
           peer?.addListener('request', (request, resovle, reject) => {
             resovle({ succes: true });
           });

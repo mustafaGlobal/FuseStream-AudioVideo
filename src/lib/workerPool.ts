@@ -28,6 +28,7 @@ class WorkerPool {
 
       workers.push(worker);
     }
+    logger.info(`created worker pool of ${workers.length} `);
     return new WorkerPool(workers);
   }
 
