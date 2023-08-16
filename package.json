@@ -1,0 +1,26 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "DEBUG=* ts-node src"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.8",
+    "@types/express": "^4.17.17",
+    "@types/ws": "^8.5.5",
+    "prettier": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@types/cors": "^2.8.13",
+    "cors": "^2.8.5",
+    "debug": "^4.3.4",
+    "express": "^4.18.2",
+    "mediasoup": "^3.12.8",
+    "short-uuid": "^4.2.2",
+    "ws": "^8.13.0"
+  }
+}
