@@ -1,6 +1,10 @@
 import { types as mediasoupTypes } from 'mediasoup';
-import { Room } from './ws-room-server';
+import { Peer, Room } from './ws-room-server';
 import { config } from '../config';
+import { EventEmitter } from 'events';
+import { createLogger } from './logger';
+
+const logger = createLogger('conference-room-constructor');
 
 interface ConferenceRoomConstructor {
   router: mediasoupTypes.Router;
@@ -8,16 +12,18 @@ interface ConferenceRoomConstructor {
   roomId: string;
 }
 
-class ConferenceRoom {
-  private roomId: string;
-  private room: Room;
+class ConferenceRoom extends EventEmitter {
+  private id: string;
+  private peerRoom: Room;
   private router: mediasoupTypes.Router;
+  private closed: boolean = false;
 
   static async create(worker: mediasoupTypes.Worker, roomId: string) {
     try {
       const { mediaCodecs } = config.mediasoup.router;
 
       const router = await worker.createRouter({ mediaCodecs });
+
       const room = new Room(roomId);
       return new ConferenceRoom({
         router,
@@ -30,17 +36,40 @@ class ConferenceRoom {
   }
 
   constructor({ router, room, roomId }: ConferenceRoomConstructor) {
+    super();
+
     this.router = router;
-    this.room = room;
-    this.roomId = roomId;
+    this.peerRoom = room;
+    this.id = roomId;
   }
 
   public getId(): string {
-    return this.roomId;
+    return this.id;
   }
 
-  public getRoom(): Room {
-    return this.room;
+  public getPeer(peerId: string): Peer | undefined {
+    return this.peerRoom.getPeer(peerId);
+  }
+
+  public getPeers(): Peer[] {
+    return this.peerRoom.getPeers();
+  }
+
+  public getRouterRtpCapabilities(): mediasoupTypes.RtpCapabilities {
+    return this.router.rtpCapabilities;
+  }
+
+  public close(): void {
+    logger.debug('close()');
+    this.emit('close');
+
+    this.closed = true;
+    this.router.close();
+    this.peerRoom.close();
+  }
+
+  public isClosed(): boolean {
+    return this.closed;
   }
 }
 
