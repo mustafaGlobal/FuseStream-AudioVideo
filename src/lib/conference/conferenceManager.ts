@@ -5,14 +5,14 @@ interface ConferenceMenagerConstructor {
   workers: WorkerPool;
 }
 
-class ConferenceMenager {
+class ConferenceManager {
   private workers: WorkerPool;
   private conferences: Map<string, ConferenceRoom>;
 
   static async create(numWorkers: number) {
     const workers: WorkerPool = await WorkerPool.create(numWorkers);
 
-    return new ConferenceMenager({ workers });
+    return new ConferenceManager({ workers });
   }
 
   constructor({ workers }: ConferenceMenagerConstructor) {
@@ -57,4 +57,4 @@ class ConferenceMenager {
   }
 }
 
-export { ConferenceMenager };
+export { ConferenceManager };

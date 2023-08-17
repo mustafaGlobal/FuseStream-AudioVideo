@@ -12,7 +12,7 @@ import {
   WebSocketTransport,
 } from './lib/ws-room-server';
 import { config } from './config';
-import { ConferenceMenager } from './lib/conference/conferenceMenager';
+import { ConferenceManager } from './lib/conference/conferenceManager';
 
 const logger = createLogger('main');
 
@@ -21,7 +21,7 @@ const main = async () => {
   app.use(cors());
   const httpServer = http.createServer(app);
   const wsServer = new WebSocketServer(httpServer);
-  const conferences = await ConferenceMenager.create(
+  const conferences = await ConferenceManager.create(
     config.mediasoup.numWorkers
   );
 
