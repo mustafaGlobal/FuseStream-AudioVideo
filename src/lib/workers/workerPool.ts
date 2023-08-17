@@ -1,8 +1,8 @@
 import * as mediasoup from 'mediasoup';
 import { types as mediasoupTypes } from 'mediasoup';
 
-import { config } from '../config';
-import { createLogger } from './logger';
+import { config } from '../../config';
+import { createLogger } from '../logger';
 
 const logger = createLogger('workerPool');
 

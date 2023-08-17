@@ -12,7 +12,7 @@ import {
   WebSocketTransport,
 } from './lib/ws-room-server';
 import { config } from './config';
-import { ConferenceMenager } from './lib/conferenceMenager';
+import { ConferenceMenager } from './lib/conference/conferenceMenager';
 
 const logger = createLogger('main');
 
@@ -33,20 +33,16 @@ const main = async () => {
     if (typeof roomId == 'string' && typeof peerId == 'string') {
       const conference = await conferences.createOrGetConference(roomId);
 
-      if (conference) {
-        if (conference.getPeer(peerId)) {
-          transport.close();
-        } else {
-          logger.debug('joined in conference %o', conference);
-          // conference.addPeer(peerId, transport);
-          // let peer = conference.getRoom().getPeer(peerId);
-          // peer?.addListener('request', (request, resovle, reject) => {
-          //   resovle({ succes: true });
-          // });
-        }
+      if (conference.getPeer(peerId)) {
+        transport.close();
+      } else {
+        logger.debug('joined in conference %o', conference);
+        // conference.addPeer(peerId, transport);
+        // let peer = conference.getRoom().getPeer(peerId);
+        // peer?.addListener('request', (request, resovle, reject) => {
+        //   resovle({ succes: true });
+        // });
       }
-    } else {
-      transport.close();
     }
   });
 

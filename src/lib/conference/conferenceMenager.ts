@@ -1,5 +1,5 @@
 import { ConferenceRoom } from './conferenceRoom';
-import { WorkerPool } from './workerPool';
+import { WorkerPool } from '../workers/workerPool';
 
 interface ConferenceMenagerConstructor {
   workers: WorkerPool;
@@ -29,23 +29,31 @@ class ConferenceMenager {
   }
 
   public removeConference(id: string) {
-    if (this.conferences.has(id)) {
-      const conference = this.getConference(id);
-      conference?.close();
-      this.conferences.delete(id);
+    if (!this.conferences.has(id)) {
+      return;
     }
+    const conference = this.getConference(id);
+    conference?.close();
+    this.conferences.delete(id);
   }
 
-  public async createOrGetConference(
-    id: string
-  ): Promise<ConferenceRoom | undefined> {
+  public async createOrGetConference(id: string): Promise<ConferenceRoom> {
     if (this.hasConference(id)) {
-      return this.getConference(id);
-    } else {
-      const worker = this.workers.getWorker();
-      const conference = await ConferenceRoom.create(worker, id);
-      return conference;
+      const conference = this.getConference(id);
+      if (conference) {
+        return conference;
+      }
     }
+
+    const worker = this.workers.getWorker();
+    const conference = await ConferenceRoom.create(worker, id);
+
+    if (!conference) {
+      throw new Error('Failed to create conference.');
+    }
+
+    this.conferences.set(id, conference);
+    return conference;
   }
 }
 

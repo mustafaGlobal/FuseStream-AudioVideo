@@ -1,8 +1,8 @@
 import { types as mediasoupTypes } from 'mediasoup';
-import { Peer, Room } from './ws-room-server';
-import { config } from '../config';
+import { Peer, Room } from '../ws-room-server';
+import { config } from '../../config';
 import { EventEmitter } from 'events';
-import { createLogger } from './logger';
+import { createLogger } from '../logger';
 
 const logger = createLogger('conference-room');
 
