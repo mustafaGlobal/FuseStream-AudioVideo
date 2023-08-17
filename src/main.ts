@@ -11,49 +11,39 @@ import {
   Message,
   WebSocketTransport,
 } from './lib/ws-room-server';
-import { WorkerPool } from './lib/workerPool';
 import { config } from './config';
-import { ConferenceRoom } from './lib/conferenceRoom';
-import { Worker } from 'mediasoup/node/lib/types';
+import { ConferenceMenager } from './lib/conferenceMenager';
 
 const logger = createLogger('main');
-
-let Conferences: Map<String, ConferenceRoom> = new Map();
 
 const main = async () => {
   const app = express();
   app.use(cors());
   const httpServer = http.createServer(app);
   const wsServer = new WebSocketServer(httpServer);
-
-  const Workers: WorkerPool = await WorkerPool.create(
+  const conferences = await ConferenceMenager.create(
     config.mediasoup.numWorkers
   );
 
-  // Create a hardcoded room for testing
-  let testConference = await ConferenceRoom.create(Workers.getWorker(), 'test');
-  Conferences.set('test', testConference);
-
-  wsServer.on('connection', (event) => {
+  wsServer.on('connection', async (event) => {
     const { requestUrl, transport } = event;
     const u = url.parse(requestUrl, true);
     const roomId = u.query.roomId;
     const peerId = u.query.peerId;
     if (typeof roomId == 'string' && typeof peerId == 'string') {
-      const conference = Conferences.get(roomId);
+      const conference = await conferences.createOrGetConference(roomId);
+
       if (conference) {
-        if (conference.getRoom().hasPeer(peerId)) {
+        if (conference.getPeer(peerId)) {
           transport.close();
         } else {
-          console.log('Peer joined');
-          conference.getRoom().addPeer(peerId, transport);
-          let peer = conference.getRoom().getPeer(peerId);
-          peer?.addListener('request', (request, resovle, reject) => {
-            resovle({ succes: true });
-          });
+          logger.debug('joined in conference %o', conference);
+          // conference.addPeer(peerId, transport);
+          // let peer = conference.getRoom().getPeer(peerId);
+          // peer?.addListener('request', (request, resovle, reject) => {
+          //   resovle({ succes: true });
+          // });
         }
-      } else {
-        transport.close();
       }
     } else {
       transport.close();

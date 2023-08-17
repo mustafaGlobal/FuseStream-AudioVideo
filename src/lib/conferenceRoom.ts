@@ -4,7 +4,7 @@ import { config } from '../config';
 import { EventEmitter } from 'events';
 import { createLogger } from './logger';
 
-const logger = createLogger('conference-room-constructor');
+const logger = createLogger('conference-room');
 
 interface ConferenceRoomConstructor {
   router: mediasoupTypes.Router;
@@ -12,11 +12,25 @@ interface ConferenceRoomConstructor {
   roomId: string;
 }
 
+interface ConferenceParticipant {
+  id: string;
+  name: string;
+  device: any;
+  RTCRtpCapabilites: mediasoupTypes.RtpCapabilities;
+  transports: Map<string, mediasoupTypes.Transport>;
+  producers: Map<string, mediasoupTypes.Producer>;
+  consumers: Map<string, mediasoupTypes.Consumer>;
+  dataProducers: Map<string, mediasoupTypes.DataProducer>;
+  dataConsumers: Map<string, mediasoupTypes.DataConsumer>;
+  peer: Peer;
+}
+
 class ConferenceRoom extends EventEmitter {
   private id: string;
   private peerRoom: Room;
   private router: mediasoupTypes.Router;
   private closed: boolean = false;
+  private participants: Map<string, ConferenceParticipant>;
 
   static async create(worker: mediasoupTypes.Worker, roomId: string) {
     try {
@@ -41,10 +55,15 @@ class ConferenceRoom extends EventEmitter {
     this.router = router;
     this.peerRoom = room;
     this.id = roomId;
+    this.participants = new Map();
   }
 
   public getId(): string {
     return this.id;
+  }
+
+  public hasPeer(peerId: string): boolean {
+    return this.peerRoom.hasPeer(peerId);
   }
 
   public getPeer(peerId: string): Peer | undefined {
@@ -73,4 +92,4 @@ class ConferenceRoom extends EventEmitter {
   }
 }
 
-export { ConferenceRoom };
+export { ConferenceRoom, ConferenceParticipant };

@@ -36,7 +36,7 @@ class Room extends SafeEventEmitter {
     return this.peers.delete(id);
   }
 
-  public hasPeer(id: string): Boolean {
+  public hasPeer(id: string): boolean {
     return this.peers.has(id);
   }
 
