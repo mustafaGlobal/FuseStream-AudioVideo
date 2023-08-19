@@ -1,4 +1,5 @@
 import { types as mediasoupTypes } from 'mediasoup';
+import { Request, Response, Notification } from '../ws-room-server/types';
 import { Peer, Room, WebSocketTransport } from '../ws-room-server';
 import { config } from '../../config';
 import { EventEmitter } from 'events';
@@ -11,19 +12,6 @@ interface ConferenceRoomConstructor {
   room: Room;
   roomId: string;
 }
-
-// interface ConferenceParticipant {
-//   id: string;
-//   name: string;
-//   device: any;
-//   RTCRtpCapabilites: mediasoupTypes.RtpCapabilities;
-//   transports: Map<string, mediasoupTypes.Transport>;
-//   producers: Map<string, mediasoupTypes.Producer>;
-//   consumers: Map<string, mediasoupTypes.Consumer>;
-//   dataProducers: Map<string, mediasoupTypes.DataProducer>;
-//   dataConsumers: Map<string, mediasoupTypes.DataConsumer>;
-//   peer: Peer;
-// }
 
 class ConferenceRoom extends EventEmitter {
   private id: string;
@@ -88,10 +76,6 @@ class ConferenceRoom extends EventEmitter {
     });
   }
 
-  public getRouterRtpCapabilities(): mediasoupTypes.RtpCapabilities {
-    return this.router.rtpCapabilities;
-  }
-
   public handleNewPeer(peerId: string, transport: WebSocketTransport) {
     if (this.hasPeer(peerId)) {
       logger.warn('handleNewPeer() | peer already joined closing it');
@@ -107,17 +91,43 @@ class ConferenceRoom extends EventEmitter {
       return;
     }
 
-    peer.data.joined = true;
-    peer.data.displayName = null;
-    peer.data.device = null;
-    peer.data.rtpCapabilities = null;
-    peer.data.sctpCapabilites = null;
+    peer.addListener('close', () => {
+      if (this.closed) {
+        return;
+      }
 
-    peer.data.transports = new Map();
-    peer.data.producers = new Map();
+      // if peer was joined notify other peers of his leave
+      if (peer.data.joined) {
+        this.getJoinedPeersExcluding(peer.id).forEach((p) => {
+          p.notify('peerClosed', { peerId: p.id });
+        });
+      }
+
+      //close all of the transports
+      for (const transport of peer.data.transports.values()) {
+        transport.close();
+      }
+
+      // if the peer was last one left close the whole conference
+      if (this.peerRoom.isEmpty()) {
+        this.close();
+      }
+    });
+
+    peer.addListener(
+      'request',
+      (request: Request, accept: Function, reject: Function) => {
+        logger.debug('Peer got new request: %o', request);
+        this.handlePeerRequest(request, peer, accept, reject);
+      }
+    );
   }
 
   public close(): void {
+    if (this.closed) {
+      return;
+    }
+
     logger.debug('close()');
     this.emit('close');
 
@@ -128,6 +138,26 @@ class ConferenceRoom extends EventEmitter {
 
   public isClosed(): boolean {
     return this.closed;
+  }
+
+  public getRouterRtpCapabilities(): mediasoupTypes.RtpCapabilities {
+    return this.router.rtpCapabilities;
+  }
+
+  private handlePeerRequest(
+    request: Request,
+    peer: Peer,
+    accept: Function,
+    reject: Function
+  ) {
+    switch (request.method) {
+      case 'getRouterRtpCapabilities':
+        accept(this.getRouterRtpCapabilities());
+        break;
+
+      default:
+        break;
+    }
   }
 }
 

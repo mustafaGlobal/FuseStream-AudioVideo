@@ -62,6 +62,10 @@ class Room extends SafeEventEmitter {
     return this.closed;
   }
 
+  public isEmpty(): boolean {
+    return this.peers.size === 0;
+  }
+
   public close(): void {
     if (this.closed) {
       return;

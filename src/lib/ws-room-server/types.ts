@@ -1,5 +1,9 @@
-type RequestResponseMethod = 'getRouterRtpCapabilities' | 'createSendTransport';
-type NotificationMethod = '';
+type RequestResponseMethod =
+  | 'joinRoom'
+  | 'getRouterRtpCapabilities'
+  | 'createSendTransport';
+
+type NotificationMethod = 'peerClosed';
 
 type Method = RequestResponseMethod | NotificationMethod;
 
@@ -11,14 +15,14 @@ enum MsgType {
 
 interface Request {
   type: MsgType.Request;
-  method: string;
+  method: RequestResponseMethod;
   id: string;
   data: any;
 }
 
 interface Response {
   type: MsgType.Response;
-  method: string;
+  method: RequestResponseMethod;
   id: string;
   success: boolean;
   data?: any;

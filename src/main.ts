@@ -33,12 +33,6 @@ const main = async () => {
     if (typeof roomId == 'string' && typeof peerId == 'string') {
       const conference = await conferences.createOrGetConference(roomId);
       conference.handleNewPeer(peerId, transport);
-
-      // conference.addPeer(peerId, transport);
-      // let peer = conference.getRoom().getPeer(peerId);
-      // peer?.addListener('request', (request, resovle, reject) => {
-      //   resovle({ succes: true });
-      // });
     }
   });
 
