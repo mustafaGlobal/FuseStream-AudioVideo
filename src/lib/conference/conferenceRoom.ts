@@ -119,7 +119,16 @@ class ConferenceRoom extends EventEmitter {
       'request',
       (request: Request, accept: Function, reject: Function) => {
         logger.debug('Peer got new request: %o', request);
-        this.handlePeerRequest(request, peer, accept, reject);
+
+        const peerRequestHandler = new PeerRequestHandler(
+          this,
+          peer,
+          request,
+          accept,
+          reject
+        );
+
+        peerRequestHandler.handleRequest();
       }
     );
   }
@@ -143,35 +152,6 @@ class ConferenceRoom extends EventEmitter {
 
   public getRouterRtpCapabilities(): mediasoupTypes.RtpCapabilities {
     return this.router.rtpCapabilities;
-  }
-
-  private handlePeerRequest(
-    request: Request,
-    peer: Peer,
-    accept: Function,
-    reject: Function
-  ) {
-    const peerRequestHandler = new PeerRequestHandler(
-      this,
-      peer,
-      request,
-      accept,
-      reject
-    );
-
-    switch (request.method) {
-      case 'getRouterRtpCapabilities':
-        peerRequestHandler.getRouterRtpCapabilities();
-        break;
-
-      case 'join':
-        peerRequestHandler.join();
-        break;
-
-      default:
-        peerRequestHandler.unsupportedRequest();
-        break;
-    }
   }
 }
 

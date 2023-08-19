@@ -23,6 +23,22 @@ class PeerRequestHandler {
     this.reject = reject;
   }
 
+  public handleRequest() {
+    switch (this.request.method) {
+      case 'getRouterRtpCapabilities':
+        this.getRouterRtpCapabilities();
+        break;
+
+      case 'join':
+        this.join();
+        break;
+
+      default:
+        this.unsupportedRequest();
+        break;
+    }
+  }
+
   public unsupportedRequest() {
     this.reject('unsuported method');
   }
