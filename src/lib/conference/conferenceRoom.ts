@@ -4,6 +4,7 @@ import { Peer, Room, WebSocketTransport } from '../ws-room-server';
 import { config } from '../../config';
 import { EventEmitter } from 'events';
 import { createLogger } from '../logger';
+import { PeerRequestHandler } from './peerRequestHandler';
 
 const logger = createLogger('conference-room');
 
@@ -150,12 +151,25 @@ class ConferenceRoom extends EventEmitter {
     accept: Function,
     reject: Function
   ) {
+    const peerRequestHandler = new PeerRequestHandler(
+      this,
+      peer,
+      request,
+      accept,
+      reject
+    );
+
     switch (request.method) {
       case 'getRouterRtpCapabilities':
-        accept(this.getRouterRtpCapabilities());
+        peerRequestHandler.getRouterRtpCapabilities();
+        break;
+
+      case 'join':
+        peerRequestHandler.join();
         break;
 
       default:
+        peerRequestHandler.unsupportedRequest();
         break;
     }
   }

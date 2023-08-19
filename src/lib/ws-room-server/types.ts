@@ -1,5 +1,5 @@
 type RequestResponseMethod =
-  | 'joinRoom'
+  | 'join'
   | 'getRouterRtpCapabilities'
   | 'createSendTransport';
 
