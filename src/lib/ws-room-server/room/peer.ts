@@ -9,10 +9,24 @@ import type {
   Response,
   Notification,
 } from '../types';
+import { types as mediasoupTypes } from 'mediasoup';
 import { MsgType } from '../types';
 import { WebSocketTransport } from '../transport/webSocketTransport';
 
 const logger = createLogger('peer');
+
+interface PeerData {
+  joined: Boolean;
+  displayName: string;
+  device: any;
+  rtpCapabilites: mediasoupTypes.RtpCapabilities | null;
+  sctpCapabilites: mediasoupTypes.SctpCapabilities | null;
+  transports: Map<string, mediasoupTypes.Transport>;
+  producers: Map<string, mediasoupTypes.Producer>;
+  consumers: Map<string, mediasoupTypes.Consumer>;
+  dataProducers: Map<string, mediasoupTypes.DataProducer>;
+  dataConsumers: Map<string, mediasoupTypes.DataConsumer>;
+}
 
 class Peer extends SafeEventEmitter {
   private transport: WebSocketTransport;
@@ -20,14 +34,29 @@ class Peer extends SafeEventEmitter {
   private connected: boolean;
   private sentRequests: Map<string, any>;
   private timeout: number = 10000;
+  public id: string;
+  public data: PeerData;
 
-  constructor(transport: WebSocketTransport) {
+  constructor(transport: WebSocketTransport, id: string) {
     super();
+    this.id = id;
     this.transport = transport;
     this.closed = false;
     this.connected = false;
     this.sentRequests = new Map<string, any>();
 
+    this.data = {
+      joined: false,
+      displayName: 'Anonymous',
+      device: null,
+      rtpCapabilites: null,
+      sctpCapabilites: null,
+      transports: new Map(),
+      producers: new Map(),
+      consumers: new Map(),
+      dataProducers: new Map(),
+      dataConsumers: new Map(),
+    };
     this.handleTransport();
   }
 

@@ -32,17 +32,13 @@ const main = async () => {
     const peerId = u.query.peerId;
     if (typeof roomId == 'string' && typeof peerId == 'string') {
       const conference = await conferences.createOrGetConference(roomId);
+      conference.handleNewPeer(peerId, transport);
 
-      if (conference.getPeer(peerId)) {
-        transport.close();
-      } else {
-        logger.debug('joined in conference %o', conference);
-        // conference.addPeer(peerId, transport);
-        // let peer = conference.getRoom().getPeer(peerId);
-        // peer?.addListener('request', (request, resovle, reject) => {
-        //   resovle({ succes: true });
-        // });
-      }
+      // conference.addPeer(peerId, transport);
+      // let peer = conference.getRoom().getPeer(peerId);
+      // peer?.addListener('request', (request, resovle, reject) => {
+      //   resovle({ succes: true });
+      // });
     }
   });
 

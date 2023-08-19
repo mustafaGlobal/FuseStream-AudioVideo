@@ -17,19 +17,21 @@ class Room extends SafeEventEmitter {
     this.closed = false;
   }
 
-  public addPeer(peerId: string, transport: WebSocketTransport): void {
+  public addPeer(peerId: string, transport: WebSocketTransport): Peer {
     if (this.peers.has(peerId)) {
       transport.close();
       throw Error(
         `peer with same peerID:${peerId} already exists in room with roomId:${this.roomId}`
       );
     }
-    const peer = new Peer(transport);
+    const peer = new Peer(transport, peerId);
     this.peers.set(peerId, peer);
 
     peer.on('close', () => {
       this.removePeer(peerId);
     });
+
+    return peer;
   }
 
   public removePeer(id: string): boolean {
