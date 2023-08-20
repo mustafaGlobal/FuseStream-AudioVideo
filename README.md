@@ -1,2 +1,2 @@
-# FuseStream-AudioVideo
+# FuseStream-Video
 Based on mediasoup SFU
