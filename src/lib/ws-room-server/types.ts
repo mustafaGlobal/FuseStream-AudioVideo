@@ -3,7 +3,7 @@ type RequestResponseMethod =
   | 'getRouterRtpCapabilities'
   | 'createSendTransport';
 
-type NotificationMethod = 'peerClosed';
+type NotificationMethod = 'peerClosed' | 'newPeer';
 
 type Method = RequestResponseMethod | NotificationMethod;
 

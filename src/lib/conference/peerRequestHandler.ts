@@ -52,6 +52,43 @@ class PeerRequestHandler {
       this.reject('peer already joined');
       return;
     }
+
+    const { displayName, device, rtpCapabilites, sctpCapabilites } =
+      this.request.data;
+
+    this.peer.data.joined = true;
+    this.peer.data.displayName = displayName;
+    this.peer.data.device = device;
+    this.peer.data.rtpCapabilites = rtpCapabilites;
+    this.peer.data.sctpCapabilites = sctpCapabilites;
+
+    // reply to the joining peer with a list of already joined peers
+    const conferenceParticipants = this.conference.getJoinedPeersExcluding(
+      this.peer.id
+    );
+
+    let peerInfo = conferenceParticipants.map((p) => {
+      return {
+        id: p.id,
+        displayName: p.data.displayName,
+        device: p.data.device,
+      };
+    });
+
+    this.accept({ peers: peerInfo });
+
+    //TODO setup consumers, producers and transports
+
+    // Notify the new Peer to all other Peers.
+    for (const otherPeer of this.conference.getJoinedPeersExcluding(
+      this.peer.id
+    )) {
+      otherPeer.notify('newPeer', {
+        id: this.peer.id,
+        displayName: this.peer.data.displayName,
+        device: this.peer.data.device,
+      });
+    }
   }
 }
 
