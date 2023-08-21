@@ -63,9 +63,11 @@ class PeerRequestHandler {
     this.peer.data.sctpCapabilites = sctpCapabilites;
 
     // reply to the joining peer with a list of already joined peers
-    const conferenceParticipants = this.conference.getJoinedPeersExcluding(
+    let conferenceParticipants = this.conference.getJoinedPeersExcluding(
       this.peer.id
     );
+
+    console.log(this.conference.getJoinedPeers());
 
     let peerInfo = conferenceParticipants.map((p) => {
       return {

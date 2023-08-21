@@ -66,15 +66,23 @@ class ConferenceRoom extends EventEmitter {
   }
 
   public getJoinedPeers() {
-    return this.getPeers().filter((p: Peer) => {
-      p.data.joined === true;
-    });
+    const peers = this.getPeers();
+
+    const checkIfJoined = (peer: Peer) => {
+      return peer.data.joined;
+    };
+
+    return peers.filter(checkIfJoined);
   }
 
   public getJoinedPeersExcluding(excludedPeerId: string) {
-    return this.getPeers().filter((p: Peer) => {
-      p.data.joined === true && p.id !== excludedPeerId;
-    });
+    const joinedPeers = this.getJoinedPeers();
+
+    const checkIfExcluded = (peer: Peer) => {
+      return peer.id !== excludedPeerId;
+    };
+
+    return joinedPeers.filter(checkIfExcluded);
   }
 
   public handleNewPeer(peerId: string, transport: WebSocketTransport) {
