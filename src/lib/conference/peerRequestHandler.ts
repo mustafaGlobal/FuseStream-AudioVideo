@@ -171,8 +171,6 @@ class PeerRequestHandler {
       this.peer.id
     );
 
-    console.log(this.conference.getJoinedPeers());
-
     let peerInfo = conferenceParticipants.map((p: Peer) => {
       return {
         id: p.id,
@@ -183,7 +181,15 @@ class PeerRequestHandler {
 
     this.accept({ peers: peerInfo });
 
-    //TODO: setup consumers, producers and transports
+    for (const producerPeer of conferenceParticipants) {
+      for (const producer of producerPeer.data.producers.values()) {
+        this.createConsumer({
+          consumerPeer: this.peer,
+          producerPeer: producerPeer,
+          producer: producer,
+        });
+      }
+    }
 
     // Notify the new Peer to all other Peers.
     for (const otherPeer of this.conference.getJoinedPeersExcluding(
@@ -195,6 +201,14 @@ class PeerRequestHandler {
         device: this.peer.data.device,
       });
     }
+  }
+
+  private createConsumer(opts: {
+    consumerPeer: Peer;
+    producerPeer: Peer;
+    producer: mediasoupTypes.Producer;
+  }) {
+    //TODO: Implement Me
   }
 }
 
