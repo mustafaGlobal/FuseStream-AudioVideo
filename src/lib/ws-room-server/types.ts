@@ -1,10 +1,11 @@
 import { types as mediasoupTypes } from 'mediasoup';
 
 type RequestResponseMethod =
-  | 'join'
   | 'getRouterRtpCapabilities'
   | 'createWebRtcTransport'
-  | 'connectWebRtcTransport';
+  | 'connectWebRtcTransport'
+  | 'restartIce'
+  | 'join';
 
 type NotificationMethod = 'peerClosed' | 'newPeer';
 
@@ -29,15 +30,19 @@ interface createWebRtcTransportRequest {
   consuming: boolean;
 }
 
+interface connectWebRtcTransportRequest {
+  transportId: string;
+  dtlsParameters: mediasoupTypes.DtlsParameters;
+}
+
+interface restartIceRequest {
+  transportId: string;
+}
+
 interface joinRequest {
   displayName: string;
   device: object;
   rtpCapabilites: mediasoupTypes.RtpCapabilities;
-}
-
-interface connectWebRtcTransportRequest {
-  transportId: string;
-  dtlsParameters: mediasoupTypes.DtlsParameters;
 }
 
 interface Response {
@@ -60,6 +65,7 @@ type WebSocketMessage = Request | Response | Notification;
 export type {
   createWebRtcTransportRequest,
   connectWebRtcTransportRequest,
+  restartIceRequest,
   joinRequest,
   WebSocketMessage,
   RequestResponseMethod,

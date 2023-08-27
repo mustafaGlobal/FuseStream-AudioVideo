@@ -6,6 +6,7 @@ import {
   connectWebRtcTransportRequest,
   createWebRtcTransportRequest,
   joinRequest,
+  restartIceRequest,
 } from '../ws-room-server/types';
 import { config } from '../../config';
 import { createLogger } from '../logger';
@@ -49,6 +50,11 @@ class PeerRequestHandler {
         const connectWebRtcTransportReq: connectWebRtcTransportRequest =
           this.request.data;
         this.connectWebRtcTransport(connectWebRtcTransportReq);
+        break;
+
+      case 'restartIce':
+        const restartIceReq: restartIceRequest = this.request.data;
+        this.restartIce(restartIceReq);
         break;
 
       case 'join':
@@ -134,8 +140,19 @@ class PeerRequestHandler {
       return;
     }
 
-    await transport.connect(request.dtlsParameters);
+    await transport.connect({ dtlsParameters: request.dtlsParameters });
     this.accept();
+  }
+
+  private async restartIce(request: restartIceRequest) {
+    const transport = this.peer.data.transports.get(request.transportId);
+    if (!transport) {
+      this.reject(`transport with id=${request.transportId} not found`);
+      return;
+    }
+    const iceParameters = await transport.restartIce();
+
+    this.accept({ iceParameters: iceParameters });
   }
 
   private join(request: joinRequest) {

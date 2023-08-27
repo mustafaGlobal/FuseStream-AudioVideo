@@ -20,7 +20,7 @@ interface PeerData {
   displayName: string;
   device: any;
   rtpCapabilites: mediasoupTypes.RtpCapabilities | null;
-  transports: Map<string, mediasoupTypes.Transport>;
+  transports: Map<string, mediasoupTypes.WebRtcTransport>;
   producers: Map<string, mediasoupTypes.Producer>;
   consumers: Map<string, mediasoupTypes.Consumer>;
 }
