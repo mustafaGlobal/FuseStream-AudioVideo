@@ -3,7 +3,8 @@ import { types as mediasoupTypes } from 'mediasoup';
 type RequestResponseMethod =
   | 'join'
   | 'getRouterRtpCapabilities'
-  | 'createWebRtcTransport';
+  | 'createWebRtcTransport'
+  | 'connectWebRtcTransport';
 
 type NotificationMethod = 'peerClosed' | 'newPeer';
 
@@ -34,6 +35,11 @@ interface joinRequest {
   rtpCapabilites: mediasoupTypes.RtpCapabilities;
 }
 
+interface connectWebRtcTransportRequest {
+  transportId: string;
+  dtlsParameters: mediasoupTypes.DtlsParameters;
+}
+
 interface Response {
   type: MsgType.Response;
   method: RequestResponseMethod;
@@ -53,6 +59,7 @@ type WebSocketMessage = Request | Response | Notification;
 
 export type {
   createWebRtcTransportRequest,
+  connectWebRtcTransportRequest,
   joinRequest,
   WebSocketMessage,
   RequestResponseMethod,

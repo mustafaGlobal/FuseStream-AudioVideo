@@ -3,6 +3,7 @@ import { ConferenceRoom } from './conferenceRoom';
 import { Peer } from '../ws-room-server';
 import {
   Request,
+  connectWebRtcTransportRequest,
   createWebRtcTransportRequest,
   joinRequest,
 } from '../ws-room-server/types';
@@ -42,6 +43,12 @@ class PeerRequestHandler {
         const createWebRtcTransportReq: createWebRtcTransportRequest =
           this.request.data;
         this.createWebRtcTransport(createWebRtcTransportReq);
+        break;
+
+      case 'connectWebRtcTransport':
+        const connectWebRtcTransportReq: connectWebRtcTransportRequest =
+          this.request.data;
+        this.connectWebRtcTransport(connectWebRtcTransportReq);
         break;
 
       case 'join':
@@ -118,6 +125,17 @@ class PeerRequestHandler {
       iceCandidates: transport.iceCandidates,
       dtlsParamters: transport.dtlsParameters,
     });
+  }
+
+  private async connectWebRtcTransport(request: connectWebRtcTransportRequest) {
+    const transport = this.peer.data.transports.get(request.transportId);
+    if (!transport) {
+      this.reject(`transport with id=${request.transportId} not found`);
+      return;
+    }
+
+    await transport.connect(request.dtlsParameters);
+    this.accept();
   }
 
   private join(request: joinRequest) {
