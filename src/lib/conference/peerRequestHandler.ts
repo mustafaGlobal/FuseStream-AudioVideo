@@ -1,6 +1,11 @@
+import { types as mediasoupTypes } from 'mediasoup';
 import { ConferenceRoom } from './conferenceRoom';
 import { Peer } from '../ws-room-server';
-import { Request } from '../ws-room-server/types';
+import { Request, createWebRtcTransportReq } from '../ws-room-server/types';
+import { config } from '../../config';
+import { createLogger } from '../logger';
+
+const logger = createLogger('peerRequestHandler');
 
 class PeerRequestHandler {
   private conference: ConferenceRoom;
@@ -29,6 +34,11 @@ class PeerRequestHandler {
         this.getRouterRtpCapabilities();
         break;
 
+      case 'createWebRtcTransport':
+        const req: createWebRtcTransportReq = this.request.data;
+        this.createWebRtcTransport(req);
+        break;
+
       case 'join':
         this.join();
         break;
@@ -39,28 +49,69 @@ class PeerRequestHandler {
     }
   }
 
-  public unsupportedRequest() {
+  private unsupportedRequest() {
     this.reject('unsuported method');
   }
 
-  public getRouterRtpCapabilities() {
+  private getRouterRtpCapabilities() {
     this.accept(this.conference.getRouterRtpCapabilities());
   }
 
-  public join() {
+  private async createWebRtcTransport(request: createWebRtcTransportReq) {
+    let transportOptions: mediasoupTypes.WebRtcTransportOptions = {
+      ...config.mediasoup.webRtcTransport,
+      enableTcp: true,
+      enableUdp: true,
+      preferUdp: true,
+      preferTcp: false,
+      enableSctp: false,
+      appData: {
+        consuming: request.consuming,
+        producing: request.producing,
+      },
+    };
+
+    if (request.forceTcp) {
+      transportOptions.enableTcp = true;
+      transportOptions.enableUdp = false;
+      transportOptions.preferTcp = true;
+      transportOptions.preferUdp = false;
+    }
+
+    const transport = await this.conference.router.createWebRtcTransport(
+      transportOptions
+    );
+
+    transport.on('dtlsstatechange', (dtlsState) => {
+      if (dtlsState === 'failed' || dtlsState === 'closed')
+        logger.warn(
+          'WebRtcTransport "dtlsstatechange" event [dtlsState:%s]',
+          dtlsState
+        );
+    });
+
+    this.peer.data.transports.set(transport.id, transport);
+
+    this.accept({
+      id: transport.id,
+      iceParameters: transport.iceParameters,
+      iceCandidates: transport.iceCandidates,
+      dtlsParamters: transport.dtlsParameters,
+    });
+  }
+
+  private join() {
     if (this.peer.data.joined) {
       this.reject('peer already joined');
       return;
     }
 
-    const { displayName, device, rtpCapabilites, sctpCapabilites } =
-      this.request.data;
+    const { displayName, device, rtpCapabilites } = this.request.data;
 
     this.peer.data.joined = true;
     this.peer.data.displayName = displayName;
     this.peer.data.device = device;
     this.peer.data.rtpCapabilites = rtpCapabilites;
-    this.peer.data.sctpCapabilites = sctpCapabilites;
 
     // reply to the joining peer with a list of already joined peers
     let conferenceParticipants = this.conference.getJoinedPeersExcluding(
@@ -69,7 +120,7 @@ class PeerRequestHandler {
 
     console.log(this.conference.getJoinedPeers());
 
-    let peerInfo = conferenceParticipants.map((p) => {
+    let peerInfo = conferenceParticipants.map((p: Peer) => {
       return {
         id: p.id,
         displayName: p.data.displayName,
@@ -79,7 +130,7 @@ class PeerRequestHandler {
 
     this.accept({ peers: peerInfo });
 
-    //TODO setup consumers, producers and transports
+    //TODO: setup consumers, producers and transports
 
     // Notify the new Peer to all other Peers.
     for (const otherPeer of this.conference.getJoinedPeersExcluding(

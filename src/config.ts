@@ -37,6 +37,7 @@ export const config = {
       ] as mediasoupTypes.TransportListenIp[],
       maxIncomeBitrate: 1500000,
       initialAvailableOutgoingBitrate: 1000000,
+      minimumAvailableOutgoingBitrate: 600000,
     },
   },
 } as const;

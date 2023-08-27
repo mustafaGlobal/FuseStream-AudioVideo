@@ -1,7 +1,7 @@
 type RequestResponseMethod =
   | 'join'
   | 'getRouterRtpCapabilities'
-  | 'createSendTransport';
+  | 'createWebRtcTransport';
 
 type NotificationMethod = 'peerClosed' | 'newPeer';
 
@@ -18,6 +18,12 @@ interface Request {
   method: RequestResponseMethod;
   id: string;
   data: any;
+}
+
+interface createWebRtcTransportReq {
+  forceTcp: boolean;
+  producing: boolean;
+  consuming: boolean;
 }
 
 interface Response {
@@ -38,6 +44,7 @@ interface Notification {
 type WebSocketMessage = Request | Response | Notification;
 
 export type {
+  createWebRtcTransportReq,
   WebSocketMessage,
   RequestResponseMethod,
   NotificationMethod,

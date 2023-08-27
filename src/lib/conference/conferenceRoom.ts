@@ -15,10 +15,10 @@ interface ConferenceRoomConstructor {
 }
 
 class ConferenceRoom extends EventEmitter {
-  private id: string;
-  private peerRoom: Room;
-  private router: mediasoupTypes.Router;
-  private closed: boolean = false;
+  accessor id: string;
+  accessor router: mediasoupTypes.Router;
+  accessor closed: boolean = false;
+  accessor peerRoom: Room;
 
   static async create(worker: mediasoupTypes.Worker, roomId: string) {
     try {
@@ -49,24 +49,8 @@ class ConferenceRoom extends EventEmitter {
     });
   }
 
-  public getId(): string {
-    return this.id;
-  }
-
-  public hasPeer(peerId: string): boolean {
-    return this.peerRoom.hasPeer(peerId);
-  }
-
-  public getPeer(peerId: string): Peer | undefined {
-    return this.peerRoom.getPeer(peerId);
-  }
-
-  public getPeers(): Peer[] {
-    return this.peerRoom.getPeers();
-  }
-
   public getJoinedPeers() {
-    const peers = this.getPeers();
+    const peers = this.peerRoom.getPeers();
 
     const checkIfJoined = (peer: Peer) => {
       return peer.data.joined;
@@ -86,9 +70,9 @@ class ConferenceRoom extends EventEmitter {
   }
 
   public handleNewPeer(peerId: string, transport: WebSocketTransport) {
-    if (this.hasPeer(peerId)) {
+    if (this.peerRoom.hasPeer(peerId)) {
       logger.warn('handleNewPeer() | peer already joined closing it');
-      this.getPeer(peerId)?.close();
+      this.peerRoom.getPeer(peerId)?.close();
     }
 
     let peer: Peer;
@@ -107,7 +91,7 @@ class ConferenceRoom extends EventEmitter {
 
       // if peer was joined notify other peers of his leave
       if (peer.data.joined) {
-        this.getJoinedPeersExcluding(peer.id).forEach((p) => {
+        this.getJoinedPeersExcluding(peer.id).forEach((p: Peer) => {
           p.notify('peerClosed', { peerId: p.id });
         });
       }
@@ -152,10 +136,6 @@ class ConferenceRoom extends EventEmitter {
     this.closed = true;
     this.router.close();
     this.peerRoom.close();
-  }
-
-  public isClosed(): boolean {
-    return this.closed;
   }
 
   public getRouterRtpCapabilities(): mediasoupTypes.RtpCapabilities {

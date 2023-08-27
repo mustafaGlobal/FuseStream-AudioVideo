@@ -20,12 +20,9 @@ interface PeerData {
   displayName: string;
   device: any;
   rtpCapabilites: mediasoupTypes.RtpCapabilities | null;
-  sctpCapabilites: mediasoupTypes.SctpCapabilities | null;
   transports: Map<string, mediasoupTypes.Transport>;
   producers: Map<string, mediasoupTypes.Producer>;
   consumers: Map<string, mediasoupTypes.Consumer>;
-  dataProducers: Map<string, mediasoupTypes.DataProducer>;
-  dataConsumers: Map<string, mediasoupTypes.DataConsumer>;
 }
 
 class Peer extends SafeEventEmitter {
@@ -50,12 +47,9 @@ class Peer extends SafeEventEmitter {
       displayName: 'Anonymous',
       device: null,
       rtpCapabilites: null,
-      sctpCapabilites: null,
       transports: new Map(),
       producers: new Map(),
       consumers: new Map(),
-      dataProducers: new Map(),
-      dataConsumers: new Map(),
     };
     this.handleTransport();
   }
