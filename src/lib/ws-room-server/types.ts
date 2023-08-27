@@ -1,3 +1,5 @@
+import { types as mediasoupTypes } from 'mediasoup';
+
 type RequestResponseMethod =
   | 'join'
   | 'getRouterRtpCapabilities'
@@ -20,10 +22,16 @@ interface Request {
   data: any;
 }
 
-interface createWebRtcTransportReq {
+interface createWebRtcTransportRequest {
   forceTcp: boolean;
   producing: boolean;
   consuming: boolean;
+}
+
+interface joinRequest {
+  displayName: string;
+  device: object;
+  rtpCapabilites: mediasoupTypes.RtpCapabilities;
 }
 
 interface Response {
@@ -44,7 +52,8 @@ interface Notification {
 type WebSocketMessage = Request | Response | Notification;
 
 export type {
-  createWebRtcTransportReq,
+  createWebRtcTransportRequest,
+  joinRequest,
   WebSocketMessage,
   RequestResponseMethod,
   NotificationMethod,

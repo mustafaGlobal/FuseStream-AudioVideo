@@ -35,7 +35,7 @@ export const config = {
       listenIps: [
         { ip: '0.0.0.0', announcedIp: '127.0.0.1' },
       ] as mediasoupTypes.TransportListenIp[],
-      maxIncomeBitrate: 1500000,
+      maxIncomingBitrate: 1500000,
       initialAvailableOutgoingBitrate: 1000000,
       minimumAvailableOutgoingBitrate: 600000,
     },

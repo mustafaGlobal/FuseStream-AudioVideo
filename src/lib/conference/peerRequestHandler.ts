@@ -1,7 +1,11 @@
 import { types as mediasoupTypes } from 'mediasoup';
 import { ConferenceRoom } from './conferenceRoom';
 import { Peer } from '../ws-room-server';
-import { Request, createWebRtcTransportReq } from '../ws-room-server/types';
+import {
+  Request,
+  createWebRtcTransportRequest,
+  joinRequest,
+} from '../ws-room-server/types';
 import { config } from '../../config';
 import { createLogger } from '../logger';
 
@@ -35,12 +39,14 @@ class PeerRequestHandler {
         break;
 
       case 'createWebRtcTransport':
-        const req: createWebRtcTransportReq = this.request.data;
-        this.createWebRtcTransport(req);
+        const createWebRtcTransportReq: createWebRtcTransportRequest =
+          this.request.data;
+        this.createWebRtcTransport(createWebRtcTransportReq);
         break;
 
       case 'join':
-        this.join();
+        const joinReq: joinRequest = this.request.data;
+        this.join(joinReq);
         break;
 
       default:
@@ -57,7 +63,7 @@ class PeerRequestHandler {
     this.accept(this.conference.getRouterRtpCapabilities());
   }
 
-  private async createWebRtcTransport(request: createWebRtcTransportReq) {
+  private async createWebRtcTransport(request: createWebRtcTransportRequest) {
     let transportOptions: mediasoupTypes.WebRtcTransportOptions = {
       ...config.mediasoup.webRtcTransport,
       enableTcp: true,
@@ -92,6 +98,20 @@ class PeerRequestHandler {
 
     this.peer.data.transports.set(transport.id, transport);
 
+    const { maxIncomingBitrate } = config.mediasoup.webRtcTransport;
+
+    // If set, apply max incoming bitrate limit.
+    if (maxIncomingBitrate) {
+      try {
+        await transport.setMaxIncomingBitrate(maxIncomingBitrate);
+      } catch (error) {
+        logger.error(
+          'Failed setting incoming bitrate for transport error: %o',
+          error
+        );
+      }
+    }
+
     this.accept({
       id: transport.id,
       iceParameters: transport.iceParameters,
@@ -100,18 +120,16 @@ class PeerRequestHandler {
     });
   }
 
-  private join() {
+  private join(request: joinRequest) {
     if (this.peer.data.joined) {
       this.reject('peer already joined');
       return;
     }
 
-    const { displayName, device, rtpCapabilites } = this.request.data;
-
     this.peer.data.joined = true;
-    this.peer.data.displayName = displayName;
-    this.peer.data.device = device;
-    this.peer.data.rtpCapabilites = rtpCapabilites;
+    this.peer.data.displayName = request.displayName;
+    this.peer.data.device = request.device;
+    this.peer.data.rtpCapabilites = request.rtpCapabilites;
 
     // reply to the joining peer with a list of already joined peers
     let conferenceParticipants = this.conference.getJoinedPeersExcluding(
