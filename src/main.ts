@@ -5,12 +5,7 @@ import url from 'node:url';
 
 import { createLogger } from './lib/logger';
 
-import {
-  WebSocketServer,
-  Room,
-  Message,
-  WebSocketTransport,
-} from './lib/ws-room-server';
+import { WebSocketServer, Room, Message, WebSocketTransport } from './lib/ws-room-server';
 import { config } from './config';
 import { ConferenceManager } from './lib/conference/conferenceManager';
 
@@ -21,9 +16,7 @@ const main = async () => {
   app.use(cors());
   const httpServer = http.createServer(app);
   const wsServer = new WebSocketServer(httpServer);
-  const conferences = await ConferenceManager.create(
-    config.mediasoup.numWorkers
-  );
+  const conferences = await ConferenceManager.create(config.mediasoup.numWorkers);
 
   wsServer.on('connection', async (event) => {
     const { requestUrl, transport } = event;

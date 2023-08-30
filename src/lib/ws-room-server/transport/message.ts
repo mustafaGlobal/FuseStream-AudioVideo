@@ -107,10 +107,7 @@ class Message {
     return response;
   }
 
-  static createNotification(
-    method: NotificationMethod,
-    data: any
-  ): Notification {
+  static createNotification(method: NotificationMethod, data: any): Notification {
     const notification: Notification = {
       type: MsgType.Notification,
       method: method,

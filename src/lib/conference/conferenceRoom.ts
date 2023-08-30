@@ -107,22 +107,13 @@ class ConferenceRoom extends EventEmitter {
       }
     });
 
-    peer.addListener(
-      'request',
-      (request: Request, accept: Function, reject: Function) => {
-        logger.debug('Peer got new request: %o', request);
+    peer.addListener('request', (request: Request, accept: Function, reject: Function) => {
+      logger.debug('Peer got new request: %o', request);
 
-        const peerRequestHandler = new PeerRequestHandler(
-          this,
-          peer,
-          request,
-          accept,
-          reject
-        );
+      const peerRequestHandler = new PeerRequestHandler(this, peer, request, accept, reject);
 
-        peerRequestHandler.handleRequest();
-      }
-    );
+      peerRequestHandler.handleRequest();
+    });
   }
 
   public close(): void {

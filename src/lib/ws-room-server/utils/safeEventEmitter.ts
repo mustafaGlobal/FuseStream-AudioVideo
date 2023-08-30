@@ -13,11 +13,7 @@ class SafeEventEmitter extends EventEmitter {
     try {
       this.emit(event, ...args);
     } catch (error) {
-      logger.error(
-        'safeEmit() | event listener threw an error [event:%s]:%o',
-        event,
-        error
-      );
+      logger.error('safeEmit() | event listener threw an error [event:%s]:%o', event, error);
     }
   }
 }

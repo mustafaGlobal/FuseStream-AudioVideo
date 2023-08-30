@@ -56,11 +56,7 @@ class WebSocketTransport extends SafeEventEmitter {
       });
 
       this.ws.addEventListener('close', (event) => {
-        logger.debug(
-          'connection close event [code:%d. reason:%s]',
-          event.code,
-          event.reason
-        );
+        logger.debug('connection close event [code:%d. reason:%s]', event.code, event.reason);
 
         this.closed = true;
         this.safeEmit('close');
@@ -85,9 +81,7 @@ class WebSocketTransport extends SafeEventEmitter {
         }
 
         if (this.listenerCount('message') === 0) {
-          logger.error(
-            'no listiners for "message" event, ignoring recived message'
-          );
+          logger.error('no listiners for "message" event, ignoring recived message');
           return;
         }
 

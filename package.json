@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "format": "npx prettier --write src",
     "dev": "DEBUG=*  tsx watch src/index.ts"
   },
   "devDependencies": {

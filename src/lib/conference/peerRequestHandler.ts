@@ -20,13 +20,7 @@ class PeerRequestHandler {
   private accept: Function;
   private reject: Function;
 
-  constructor(
-    conference: ConferenceRoom,
-    peer: Peer,
-    request: Request,
-    accept: Function,
-    reject: Function
-  ) {
+  constructor(conference: ConferenceRoom, peer: Peer, request: Request, accept: Function, reject: Function) {
     this.conference = conference;
     this.peer = peer;
     this.request = request;
@@ -41,14 +35,12 @@ class PeerRequestHandler {
         break;
 
       case 'createWebRtcTransport':
-        const createWebRtcTransportReq: createWebRtcTransportRequest =
-          this.request.data;
+        const createWebRtcTransportReq: createWebRtcTransportRequest = this.request.data;
         this.createWebRtcTransport(createWebRtcTransportReq);
         break;
 
       case 'connectWebRtcTransport':
-        const connectWebRtcTransportReq: connectWebRtcTransportRequest =
-          this.request.data;
+        const connectWebRtcTransportReq: connectWebRtcTransportRequest = this.request.data;
         this.connectWebRtcTransport(connectWebRtcTransportReq);
         break;
 
@@ -97,16 +89,11 @@ class PeerRequestHandler {
       transportOptions.preferUdp = false;
     }
 
-    const transport = await this.conference.router.createWebRtcTransport(
-      transportOptions
-    );
+    const transport = await this.conference.router.createWebRtcTransport(transportOptions);
 
     transport.on('dtlsstatechange', (dtlsState) => {
       if (dtlsState === 'failed' || dtlsState === 'closed')
-        logger.warn(
-          'WebRtcTransport "dtlsstatechange" event [dtlsState:%s]',
-          dtlsState
-        );
+        logger.warn('WebRtcTransport "dtlsstatechange" event [dtlsState:%s]', dtlsState);
     });
 
     this.peer.data.transports.set(transport.id, transport);
@@ -118,10 +105,7 @@ class PeerRequestHandler {
       try {
         await transport.setMaxIncomingBitrate(maxIncomingBitrate);
       } catch (error) {
-        logger.error(
-          'Failed setting incoming bitrate for transport error: %o',
-          error
-        );
+        logger.error('Failed setting incoming bitrate for transport error: %o', error);
       }
     }
 
@@ -167,9 +151,7 @@ class PeerRequestHandler {
     this.peer.data.rtpCapabilites = request.rtpCapabilites;
 
     // reply to the joining peer with a list of already joined peers
-    let conferenceParticipants = this.conference.getJoinedPeersExcluding(
-      this.peer.id
-    );
+    let conferenceParticipants = this.conference.getJoinedPeersExcluding(this.peer.id);
 
     let peerInfo = conferenceParticipants.map((p: Peer) => {
       return {
@@ -192,9 +174,7 @@ class PeerRequestHandler {
     }
 
     // Notify the new Peer to all other Peers.
-    for (const otherPeer of this.conference.getJoinedPeersExcluding(
-      this.peer.id
-    )) {
+    for (const otherPeer of this.conference.getJoinedPeersExcluding(this.peer.id)) {
       otherPeer.notify('newPeer', {
         id: this.peer.id,
         displayName: this.peer.data.displayName,
@@ -203,12 +183,78 @@ class PeerRequestHandler {
     }
   }
 
-  private createConsumer(opts: {
-    consumerPeer: Peer;
-    producerPeer: Peer;
-    producer: mediasoupTypes.Producer;
-  }) {
-    //TODO: Implement Me
+  private async createConsumer(opts: { consumerPeer: Peer; producerPeer: Peer; producer: mediasoupTypes.Producer }) {
+    // If remote peer can't consume it dont create a consumer
+    if (
+      !opts.consumerPeer.data.rtpCapabilites ||
+      !this.conference.router.canConsume({
+        producerId: opts.producer.id,
+        rtpCapabilities: opts.consumerPeer.data.rtpCapabilites,
+      })
+    ) {
+      return;
+    }
+
+    const transport = Array.from(opts.consumerPeer.data.transports.values()).find((t) => t.appData.consuming);
+    if (!transport) {
+      logger.error('createConsumer() | Transport for consuming not found');
+      return;
+    }
+
+    let consumer: mediasoupTypes.Consumer;
+
+    try {
+      consumer = await transport.consume({
+        producerId: opts.producer.id,
+        rtpCapabilities: opts.consumerPeer.data.rtpCapabilites,
+        enableRtx: true,
+        paused: true,
+      });
+    } catch (error) {
+      logger.warn('createConsumer() | transport.consumer error %o', error);
+      return;
+    }
+
+    // Store the new consumer
+    opts.consumerPeer.data.consumers.set(consumer.id, consumer);
+
+    consumer.on('transportclose', () => {
+      opts.consumerPeer.data.consumers.delete(consumer.id);
+    });
+
+    consumer.on('producerclose', () => {
+      opts.consumerPeer.data.consumers.delete(consumer.id);
+      opts.consumerPeer.notify('consumerClosed', { consumerId: consumer.id });
+    });
+
+    consumer.on('producerpause', () => {
+      opts.consumerPeer.notify('consumerPaused', { consumerId: consumer.id });
+    });
+
+    consumer.on('producerresume', () => {
+      opts.consumerPeer.notify('consumerResumed', { consumerId: consumer.id });
+    });
+
+    consumer.on('layerschange', (layers) => {
+      opts.consumerPeer.notify('consumerLayersChanged', {
+        consumerId: consumer.id,
+        spatialLayer: layers ? layers.spatialLayer : null,
+        temporalLayer: layers ? layers.temporalLayer : null,
+      });
+    });
+
+    await opts.consumerPeer.request('newConsumer', {
+      peerId: opts.producerPeer.id,
+      producerId: opts.producer.id,
+      id: consumer.id,
+      kind: consumer.kind,
+      rtpParameters: consumer.rtpParameters,
+      type: consumer.type,
+      appData: consumer.appData,
+      producerPaused: consumer.producerPaused,
+    });
+
+    await consumer.resume();
   }
 }
 

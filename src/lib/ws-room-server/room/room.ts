@@ -20,9 +20,7 @@ class Room extends SafeEventEmitter {
   public addPeer(peerId: string, transport: WebSocketTransport): Peer {
     if (this.peers.has(peerId)) {
       transport.close();
-      throw Error(
-        `peer with same peerID:${peerId} already exists in room with roomId:${this.roomId}`
-      );
+      throw Error(`peer with same peerID:${peerId} already exists in room with roomId:${this.roomId}`);
     }
     const peer = new Peer(transport, peerId);
     this.peers.set(peerId, peer);

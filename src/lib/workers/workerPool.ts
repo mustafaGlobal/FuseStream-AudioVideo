@@ -38,8 +38,7 @@ class WorkerPool {
 
   getWorker(): mediasoupTypes.Worker {
     const worker = this.workers[this.currentWorkerIndex];
-    this.currentWorkerIndex =
-      (this.currentWorkerIndex + 1) % this.workers.length;
+    this.currentWorkerIndex = (this.currentWorkerIndex + 1) % this.workers.length;
     return worker;
   }
 }

@@ -10,14 +10,7 @@ export const config = {
       rtcMinPort: 10000,
       rtcMaxPort: 10100,
       logLevel: 'debug',
-      logTags: [
-        'info',
-        'ice',
-        'dtls',
-        'rtp',
-        'srtp',
-        'rtcp',
-      ] as mediasoupTypes.WorkerLogTag[],
+      logTags: ['info', 'ice', 'dtls', 'rtp', 'srtp', 'rtcp'] as mediasoupTypes.WorkerLogTag[],
     },
     router: {
       mediaCodecs: [
@@ -32,9 +25,7 @@ export const config = {
       ] as mediasoupTypes.RtpCodecCapability[],
     },
     webRtcTransport: {
-      listenIps: [
-        { ip: '0.0.0.0', announcedIp: '127.0.0.1' },
-      ] as mediasoupTypes.TransportListenIp[],
+      listenIps: [{ ip: '0.0.0.0', announcedIp: '127.0.0.1' }] as mediasoupTypes.TransportListenIp[],
       maxIncomingBitrate: 1500000,
       initialAvailableOutgoingBitrate: 1000000,
       minimumAvailableOutgoingBitrate: 600000,

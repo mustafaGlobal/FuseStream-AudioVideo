@@ -195,10 +195,7 @@ class Peer extends SafeEventEmitter {
   private handleResponse(response: Response) {
     const request = this.sentRequests.get(response.id);
     if (!request) {
-      logger.error(
-        'recived response does not match any sent request [id:%s]',
-        response.id
-      );
+      logger.error('recived response does not match any sent request [id:%s]', response.id);
     }
 
     if (response.success) {

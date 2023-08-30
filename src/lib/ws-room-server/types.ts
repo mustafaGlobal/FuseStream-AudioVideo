@@ -5,9 +5,16 @@ type RequestResponseMethod =
   | 'createWebRtcTransport'
   | 'connectWebRtcTransport'
   | 'restartIce'
-  | 'join';
+  | 'join'
+  | 'newConsumer';
 
-type NotificationMethod = 'peerClosed' | 'newPeer';
+type NotificationMethod =
+  | 'peerClosed'
+  | 'newPeer'
+  | 'consumerClosed'
+  | 'consumerPaused'
+  | 'consumerResumed'
+  | 'consumerLayersChanged';
 
 type Method = RequestResponseMethod | NotificationMethod;
 
