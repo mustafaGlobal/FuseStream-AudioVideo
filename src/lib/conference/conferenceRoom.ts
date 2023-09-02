@@ -15,10 +15,10 @@ interface ConferenceRoomConstructor {
 }
 
 class ConferenceRoom extends EventEmitter {
-  accessor id: string;
-  accessor router: mediasoupTypes.Router;
-  accessor closed: boolean = false;
-  accessor peerRoom: Room;
+  public id: string;
+  public router: mediasoupTypes.Router;
+  public closed: boolean = false;
+  public peerRoom: Room;
 
   static async create(worker: mediasoupTypes.Worker, roomId: string) {
     try {
