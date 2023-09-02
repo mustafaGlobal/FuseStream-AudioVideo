@@ -7,9 +7,11 @@ import {
   connectWebRtcTransportRequest,
   createWebRtcTransportRequest,
   joinRequest,
+  pauseConsumerRequest,
   pauseProducerRequest,
   produceRequest,
   restartIceRequest,
+  resumeConsumerRequest,
   resumeProducerRequest,
 } from '../ws-room-server/types';
 import { config } from '../../config';
@@ -76,6 +78,16 @@ class PeerRequestHandler {
       case 'resumeProducer':
         const resumeProducerReq: resumeProducerRequest = this.request.data;
         this.resumeProducer(resumeProducerReq);
+        break;
+
+      case 'pauseConsumer':
+        const pauseConsumerReq: pauseConsumerRequest = this.request.data;
+        this.pauseConsumer(pauseConsumerReq);
+        break;
+
+      case 'resumeConsumer':
+        const resumeConsumerReq: resumeConsumerRequest = this.request.data;
+        this.resumeConsumer(resumeConsumerReq);
         break;
 
       default:
@@ -370,6 +382,40 @@ class PeerRequestHandler {
     }
 
     await producer.resume();
+
+    this.accept();
+  }
+
+  private async pauseConsumer(request: pauseConsumerRequest) {
+    if (!this.peer.data.joined) {
+      this.reject('peer not joined');
+      return;
+    }
+
+    const consumer = this.peer.data.consumers.get(request.consumerId);
+    if (!consumer) {
+      this.reject(`consumer with id "${request.consumerId}" not found`);
+      return;
+    }
+
+    await consumer.pause();
+
+    this.accept();
+  }
+
+  private async resumeConsumer(request: resumeConsumerRequest) {
+    if (!this.peer.data.joined) {
+      this.reject('peer not joined');
+      return;
+    }
+
+    const consumer = this.peer.data.consumers.get(request.consumerId);
+    if (!consumer) {
+      this.reject(`consumer with id "${request.consumerId}" not found`);
+      return;
+    }
+
+    await consumer.resume();
 
     this.accept();
   }
