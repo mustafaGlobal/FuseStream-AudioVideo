@@ -14,7 +14,8 @@ type RequestResponseMethod =
   | 'pauseConsumer'
   | 'resumeConsumer'
   | 'setConsumerPreferredLayers'
-  | 'setConsumerPriority';
+  | 'setConsumerPriority'
+  | 'requestConsumerKeyFrame';
 
 type NotificationMethod =
   | 'peerClosed'
@@ -98,6 +99,10 @@ interface setConsumerPriorityRequest {
   priority: number;
 }
 
+interface requestConsumerKeyFrameRequest {
+  consumerId: string;
+}
+
 interface Response {
   type: MsgType.Response;
   method: RequestResponseMethod;
@@ -128,6 +133,7 @@ export type {
   resumeConsumerRequest,
   setConsumerPreferredLayersRequest,
   setConsumerPriorityRequest,
+  requestConsumerKeyFrameRequest,
   WebSocketMessage,
   RequestResponseMethod,
   NotificationMethod,

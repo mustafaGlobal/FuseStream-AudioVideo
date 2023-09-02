@@ -10,6 +10,7 @@ import {
   pauseConsumerRequest,
   pauseProducerRequest,
   produceRequest,
+  requestConsumerKeyFrameRequest,
   restartIceRequest,
   resumeConsumerRequest,
   resumeProducerRequest,
@@ -100,6 +101,11 @@ class PeerRequestHandler {
       case 'setConsumerPriority':
         const setConsumerPriorityReq: setConsumerPriorityRequest = this.request.data;
         this.setConsumerPriority(setConsumerPriorityReq);
+        break;
+
+      case 'requestConsumerKeyFrame':
+        const requestConsumerKeyFrameReq: requestConsumerKeyFrameRequest = this.request.data;
+        this.requestConsumerKeyFrame(requestConsumerKeyFrameReq);
         break;
 
       default:
@@ -462,6 +468,23 @@ class PeerRequestHandler {
     }
 
     await consumer.setPriority(request.priority);
+
+    this.accept();
+  }
+
+  private async requestConsumerKeyFrame(request: requestConsumerKeyFrameRequest) {
+    if (!this.peer.data.joined) {
+      this.reject('peer not joined');
+      return;
+    }
+
+    const consumer = this.peer.data.consumers.get(request.consumerId);
+    if (!consumer) {
+      this.reject(`consumer with id "${request.consumerId}" not found`);
+      return;
+    }
+
+    await consumer.requestKeyFrame();
 
     this.accept();
   }
