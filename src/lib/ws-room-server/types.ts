@@ -6,7 +6,8 @@ type RequestResponseMethod =
   | 'connectWebRtcTransport'
   | 'restartIce'
   | 'join'
-  | 'newConsumer';
+  | 'newConsumer'
+  | 'produce';
 
 type NotificationMethod =
   | 'peerClosed'
@@ -52,6 +53,13 @@ interface joinRequest {
   rtpCapabilites: mediasoupTypes.RtpCapabilities;
 }
 
+interface produceRequest {
+  transportId: string;
+  kind: mediasoupTypes.MediaKind;
+  rtpParameters: mediasoupTypes.RtpParameters;
+  appData: any;
+}
+
 interface Response {
   type: MsgType.Response;
   method: RequestResponseMethod;
@@ -74,6 +82,7 @@ export type {
   connectWebRtcTransportRequest,
   restartIceRequest,
   joinRequest,
+  produceRequest,
   WebSocketMessage,
   RequestResponseMethod,
   NotificationMethod,

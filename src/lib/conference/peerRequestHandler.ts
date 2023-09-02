@@ -6,6 +6,7 @@ import {
   connectWebRtcTransportRequest,
   createWebRtcTransportRequest,
   joinRequest,
+  produceRequest,
   restartIceRequest,
 } from '../ws-room-server/types';
 import { config } from '../../config';
@@ -52,6 +53,11 @@ class PeerRequestHandler {
       case 'join':
         const joinReq: joinRequest = this.request.data;
         this.join(joinReq);
+        break;
+
+      case 'produce':
+        const produceReq: produceRequest = this.request.data;
+        this.produce(produceReq);
         break;
 
       default:
@@ -255,6 +261,47 @@ class PeerRequestHandler {
     });
 
     await consumer.resume();
+  }
+
+  private async produce(request: produceRequest) {
+    if (!this.peer.data.joined) {
+      this.reject('peer not joined');
+      return;
+    }
+
+    const transport = this.peer.data.transports.get(request.transportId);
+    if (!transport) {
+      this.reject(`transport with id "${request.transportId}" not found`);
+      return;
+    }
+
+    if (request.kind != 'video') {
+      this.reject('only video is supported');
+      return;
+    }
+
+    // attach peerId to appData
+    request.appData = { ...request.appData, peerId: this.peer.id };
+
+    const producer = await transport.produce({
+      kind: request.kind,
+      rtpParameters: request.rtpParameters,
+      appData: request.appData,
+      // keyFrameRequestDelay: 5000, Maybe usefull later
+    });
+
+    this.peer.data.producers.set(producer.id, producer);
+
+    this.accept({ id: producer.id });
+
+    //create consumers for producer
+    for (const p of this.conference.getJoinedPeersExcluding(this.peer.id)) {
+      this.createConsumer({
+        consumerPeer: p,
+        producerPeer: this.peer,
+        producer,
+      });
+    }
   }
 }
 
