@@ -7,8 +7,10 @@ import {
   connectWebRtcTransportRequest,
   createWebRtcTransportRequest,
   joinRequest,
+  pauseProducerRequest,
   produceRequest,
   restartIceRequest,
+  resumeProducerRequest,
 } from '../ws-room-server/types';
 import { config } from '../../config';
 import { createLogger } from '../logger';
@@ -64,6 +66,16 @@ class PeerRequestHandler {
       case 'closeProducer':
         const closeProducerReq: closeProducerRequest = this.request.data;
         this.closeProducer(closeProducerReq);
+        break;
+
+      case 'pauseProducer':
+        const pauseProducerReq: pauseProducerRequest = this.request.data;
+        this.pauseProducer(pauseProducerReq);
+        break;
+
+      case 'resumeProducer':
+        const resumeProducerReq: resumeProducerRequest = this.request.data;
+        this.resumeProducer(resumeProducerReq);
         break;
 
       default:
@@ -310,7 +322,7 @@ class PeerRequestHandler {
     }
   }
 
-  private async closeProducer(request: closeProducerRequest) {
+  private closeProducer(request: closeProducerRequest) {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;
@@ -324,6 +336,40 @@ class PeerRequestHandler {
 
     producer.close();
     this.peer.data.producers.delete(producer.id);
+
+    this.accept();
+  }
+
+  private async pauseProducer(request: pauseProducerRequest) {
+    if (!this.peer.data.joined) {
+      this.reject('peer not joined');
+      return;
+    }
+
+    const producer = this.peer.data.producers.get(request.producerId);
+    if (!producer) {
+      this.reject(`producer with id "${request.producerId}" not found`);
+      return;
+    }
+
+    await producer.pause();
+
+    this.accept();
+  }
+
+  private async resumeProducer(request: resumeProducerRequest) {
+    if (!this.peer.data.joined) {
+      this.reject('peer not joined');
+      return;
+    }
+
+    const producer = this.peer.data.producers.get(request.producerId);
+    if (!producer) {
+      this.reject(`producer with id "${request.producerId}" not found`);
+      return;
+    }
+
+    await producer.resume();
 
     this.accept();
   }

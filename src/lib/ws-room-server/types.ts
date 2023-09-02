@@ -8,7 +8,9 @@ type RequestResponseMethod =
   | 'join'
   | 'newConsumer'
   | 'produce'
-  | 'closeProducer';
+  | 'closeProducer'
+  | 'pauseProducer'
+  | 'resumeProducer';
 
 type NotificationMethod =
   | 'peerClosed'
@@ -65,6 +67,14 @@ interface closeProducerRequest {
   producerId: string;
 }
 
+interface pauseProducerRequest {
+  producerId: string;
+}
+
+interface resumeProducerRequest {
+  producerId: string;
+}
+
 interface Response {
   type: MsgType.Response;
   method: RequestResponseMethod;
@@ -89,6 +99,8 @@ export type {
   joinRequest,
   produceRequest,
   closeProducerRequest,
+  pauseProducerRequest,
+  resumeProducerRequest,
   WebSocketMessage,
   RequestResponseMethod,
   NotificationMethod,
