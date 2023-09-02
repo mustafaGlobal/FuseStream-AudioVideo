@@ -13,6 +13,7 @@ import {
   restartIceRequest,
   resumeConsumerRequest,
   resumeProducerRequest,
+  setConsumerPreferredLayersRequest,
 } from '../ws-room-server/types';
 import { config } from '../../config';
 import { createLogger } from '../logger';
@@ -88,6 +89,11 @@ class PeerRequestHandler {
       case 'resumeConsumer':
         const resumeConsumerReq: resumeConsumerRequest = this.request.data;
         this.resumeConsumer(resumeConsumerReq);
+        break;
+
+      case 'setConsumerPreferredLayers':
+        const setConsumerPreferredLayersReq: setConsumerPreferredLayersRequest = this.request.data;
+        this.setConsumerPreferredLayers(setConsumerPreferredLayersReq);
         break;
 
       default:
@@ -418,6 +424,21 @@ class PeerRequestHandler {
     await consumer.resume();
 
     this.accept();
+  }
+
+  private async setConsumerPreferredLayers(request: setConsumerPreferredLayersRequest) {
+    if (!this.peer.data.joined) {
+      this.reject('peer not joined');
+      return;
+    }
+
+    const consumer = this.peer.data.consumers.get(request.consumerId);
+    if (!consumer) {
+      this.reject(`consumer with id "${request.consumerId}" not found`);
+      return;
+    }
+
+    await consumer.setPreferredLayers({ spatialLayer: request.spatialLayer, temporalLayer: request.temporalLayer });
   }
 }
 

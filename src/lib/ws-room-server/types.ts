@@ -12,7 +12,8 @@ type RequestResponseMethod =
   | 'pauseProducer'
   | 'resumeProducer'
   | 'pauseConsumer'
-  | 'resumeConsumer';
+  | 'resumeConsumer'
+  | 'setConsumerPreferredLayers';
 
 type NotificationMethod =
   | 'peerClosed'
@@ -85,6 +86,12 @@ interface resumeConsumerRequest {
   consumerId: string;
 }
 
+interface setConsumerPreferredLayersRequest {
+  consumerId: string;
+  spatialLayer: number;
+  temporalLayer: number | undefined;
+}
+
 interface Response {
   type: MsgType.Response;
   method: RequestResponseMethod;
@@ -113,6 +120,7 @@ export type {
   resumeProducerRequest,
   pauseConsumerRequest,
   resumeConsumerRequest,
+  setConsumerPreferredLayersRequest,
   WebSocketMessage,
   RequestResponseMethod,
   NotificationMethod,
