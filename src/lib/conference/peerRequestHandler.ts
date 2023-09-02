@@ -14,6 +14,7 @@ import {
   resumeConsumerRequest,
   resumeProducerRequest,
   setConsumerPreferredLayersRequest,
+  setConsumerPriorityRequest,
 } from '../ws-room-server/types';
 import { config } from '../../config';
 import { createLogger } from '../logger';
@@ -94,6 +95,11 @@ class PeerRequestHandler {
       case 'setConsumerPreferredLayers':
         const setConsumerPreferredLayersReq: setConsumerPreferredLayersRequest = this.request.data;
         this.setConsumerPreferredLayers(setConsumerPreferredLayersReq);
+        break;
+
+      case 'setConsumerPriority':
+        const setConsumerPriorityReq: setConsumerPriorityRequest = this.request.data;
+        this.setConsumerPriority(setConsumerPriorityReq);
         break;
 
       default:
@@ -323,7 +329,7 @@ class PeerRequestHandler {
       kind: request.kind,
       rtpParameters: request.rtpParameters,
       appData: request.appData,
-      // keyFrameRequestDelay: 5000, Maybe usefull later
+      keyFrameRequestDelay: 2000,
     });
 
     this.peer.data.producers.set(producer.id, producer);
@@ -439,6 +445,25 @@ class PeerRequestHandler {
     }
 
     await consumer.setPreferredLayers({ spatialLayer: request.spatialLayer, temporalLayer: request.temporalLayer });
+
+    this.accept();
+  }
+
+  private async setConsumerPriority(request: setConsumerPriorityRequest) {
+    if (!this.peer.data.joined) {
+      this.reject('peer not joined');
+      return;
+    }
+
+    const consumer = this.peer.data.consumers.get(request.consumerId);
+    if (!consumer) {
+      this.reject(`consumer with id "${request.consumerId}" not found`);
+      return;
+    }
+
+    await consumer.setPriority(request.priority);
+
+    this.accept();
   }
 }
 

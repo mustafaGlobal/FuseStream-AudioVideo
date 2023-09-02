@@ -13,7 +13,8 @@ type RequestResponseMethod =
   | 'resumeProducer'
   | 'pauseConsumer'
   | 'resumeConsumer'
-  | 'setConsumerPreferredLayers';
+  | 'setConsumerPreferredLayers'
+  | 'setConsumerPriority';
 
 type NotificationMethod =
   | 'peerClosed'
@@ -92,6 +93,11 @@ interface setConsumerPreferredLayersRequest {
   temporalLayer: number | undefined;
 }
 
+interface setConsumerPriorityRequest {
+  consumerId: string;
+  priority: number;
+}
+
 interface Response {
   type: MsgType.Response;
   method: RequestResponseMethod;
@@ -121,6 +127,7 @@ export type {
   pauseConsumerRequest,
   resumeConsumerRequest,
   setConsumerPreferredLayersRequest,
+  setConsumerPriorityRequest,
   WebSocketMessage,
   RequestResponseMethod,
   NotificationMethod,
