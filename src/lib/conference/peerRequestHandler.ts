@@ -3,6 +3,7 @@ import { ConferenceRoom } from './conferenceRoom';
 import { Peer } from '../ws-room-server';
 import {
   Request,
+  closeProducerRequest,
   connectWebRtcTransportRequest,
   createWebRtcTransportRequest,
   joinRequest,
@@ -58,6 +59,11 @@ class PeerRequestHandler {
       case 'produce':
         const produceReq: produceRequest = this.request.data;
         this.produce(produceReq);
+        break;
+
+      case 'closeProducer':
+        const closeProducerReq: closeProducerRequest = this.request.data;
+        this.closeProducer(closeProducerReq);
         break;
 
       default:
@@ -302,6 +308,24 @@ class PeerRequestHandler {
         producer,
       });
     }
+  }
+
+  private async closeProducer(request: closeProducerRequest) {
+    if (!this.peer.data.joined) {
+      this.reject('peer not joined');
+      return;
+    }
+
+    const producer = this.peer.data.producers.get(request.producerId);
+    if (!producer) {
+      this.reject(`producer with id "${request.producerId}" not found`);
+      return;
+    }
+
+    producer.close();
+    this.peer.data.producers.delete(producer.id);
+
+    this.accept();
   }
 }
 
