@@ -28,7 +28,6 @@ interface PeerData {
 class Peer extends SafeEventEmitter {
   private transport: WebSocketTransport;
   private closed: boolean;
-  private connected: boolean;
   private sentRequests: Map<string, any>;
   private timeout: number = 10000;
   public id: string;
@@ -39,7 +38,6 @@ class Peer extends SafeEventEmitter {
     this.id = id;
     this.transport = transport;
     this.closed = false;
-    this.connected = false;
     this.sentRequests = new Map<string, any>();
 
     this.data = {
@@ -107,7 +105,6 @@ class Peer extends SafeEventEmitter {
 
     this.transport.close();
     this.closed = true;
-    this.connected = false;
 
     for (const request of this.sentRequests.values()) {
       request.close();
@@ -120,14 +117,9 @@ class Peer extends SafeEventEmitter {
     return this.closed;
   }
 
-  public isConnected(): boolean {
-    return this.connected;
-  }
-
   private handleTransport(): void {
     if (this.transport.isClosed()) {
       this.closed = true;
-      this.connected = false;
       this.safeEmit('close');
     }
 
@@ -136,7 +128,6 @@ class Peer extends SafeEventEmitter {
         return;
       }
       logger.debug('open');
-      this.connected = true;
       this.closed = false;
       this.safeEmit('open');
     });
@@ -146,7 +137,6 @@ class Peer extends SafeEventEmitter {
         return;
       }
       logger.debug('close');
-      this.connected = false;
       this.closed = true;
       this.safeEmit('close');
     });

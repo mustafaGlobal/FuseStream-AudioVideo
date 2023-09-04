@@ -11,8 +11,9 @@ class WebSocketTransport extends SafeEventEmitter {
 
   constructor(ws: WebSocket) {
     super();
-    this.closed = false;
     this.ws = ws;
+
+    this.closed = false;
     this.handleConnection();
   }
 
@@ -50,11 +51,6 @@ class WebSocketTransport extends SafeEventEmitter {
 
   private handleConnection() {
     if (this.ws) {
-      this.ws.addEventListener('open', () => {
-        this.closed = false;
-        this.safeEmit('open');
-      });
-
       this.ws.addEventListener('close', (event) => {
         logger.debug('connection close event [code:%d. reason:%s]', event.code, event.reason);
 
@@ -87,6 +83,10 @@ class WebSocketTransport extends SafeEventEmitter {
 
         this.safeEmit('message', message);
       });
+
+      setTimeout(() => {
+        this.safeEmit('open');
+      }, 100);
     }
   }
 }

@@ -85,14 +85,10 @@ class ConferenceRoom extends EventEmitter {
     }
 
     peer.addListener('close', () => {
-      if (this.closed) {
-        return;
-      }
-
       // if peer was joined notify other peers of his leave
       if (peer.data.joined) {
         this.getJoinedPeersExcluding(peer.id).forEach((p: Peer) => {
-          p.notify('peerClosed', { peerId: p.id });
+          p.notify('peerClosed', { peerId: peer.id });
         });
       }
 
