@@ -1,5 +1,5 @@
 import { types as mediasoupTypes } from 'mediasoup';
-import { Request, Response, Notification } from '../ws-room-server/types';
+import { Request, Response, Notification, peerClosedNotification } from '../ws-room-server/types';
 import { Peer, Room, WebSocketTransport } from '../ws-room-server';
 import { config } from '../../config';
 import { EventEmitter } from 'events';
@@ -88,7 +88,10 @@ class ConferenceRoom extends EventEmitter {
       // if peer was joined notify other peers of his leave
       if (peer.data.joined) {
         this.getJoinedPeersExcluding(peer.id).forEach((p: Peer) => {
-          p.notify('peerClosed', { peerId: peer.id });
+          const peerClosedNotificationData: peerClosedNotification = {
+            peerId: peer.id,
+          };
+          p.notify('peerClosed', peerClosedNotificationData);
         });
       }
 

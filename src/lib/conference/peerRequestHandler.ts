@@ -5,8 +5,13 @@ import {
   Request,
   closeProducerRequest,
   connectWebRtcTransportRequest,
+  consumerClosedNotification,
+  consumerLayersChangedNotification,
+  consumerPausedNotification,
   createWebRtcTransportRequest,
   joinRequest,
+  newConsumerRequest,
+  newPeerNotification,
   pauseConsumerRequest,
   pauseProducerRequest,
   produceRequest,
@@ -229,11 +234,12 @@ class PeerRequestHandler {
 
     // Notify the new Peer to all other Peers.
     for (const otherPeer of this.conference.getJoinedPeersExcluding(this.peer.id)) {
-      otherPeer.notify('newPeer', {
+      const newPeerNotificationData: newPeerNotification = {
         id: this.peer.id,
         displayName: this.peer.data.displayName,
         device: this.peer.data.device,
-      });
+      };
+      otherPeer.notify('newPeer', newPeerNotificationData);
     }
   }
 
@@ -278,26 +284,41 @@ class PeerRequestHandler {
 
     consumer.on('producerclose', () => {
       opts.consumerPeer.data.consumers.delete(consumer.id);
-      opts.consumerPeer.notify('consumerClosed', { consumerId: consumer.id });
+      const consumerClosedNotificationData: consumerClosedNotification = {
+        peerId: opts.producerPeer.id,
+        consumerId: consumer.id,
+      };
+      opts.consumerPeer.notify('consumerClosed', consumerClosedNotificationData);
     });
 
     consumer.on('producerpause', () => {
-      opts.consumerPeer.notify('consumerPaused', { consumerId: consumer.id });
+      const consumerPausedNotificationData: consumerPausedNotification = {
+        peerId: opts.producerPeer.id,
+        consumerId: consumer.id,
+      };
+      opts.consumerPeer.notify('consumerPaused', consumerPausedNotificationData);
     });
 
     consumer.on('producerresume', () => {
-      opts.consumerPeer.notify('consumerResumed', { consumerId: consumer.id });
+      const consumerResumedNotificationData: consumerPausedNotification = {
+        peerId: opts.producerPeer.id,
+        consumerId: consumer.id,
+      };
+      opts.consumerPeer.notify('consumerResumed', consumerResumedNotificationData);
     });
 
     consumer.on('layerschange', (layers) => {
-      opts.consumerPeer.notify('consumerLayersChanged', {
+      const consumerLayersChangedNotificationData: consumerLayersChangedNotification = {
+        peerId: opts.producerPeer.id,
         consumerId: consumer.id,
         spatialLayer: layers ? layers.spatialLayer : null,
         temporalLayer: layers ? layers.temporalLayer : null,
-      });
+      };
+
+      opts.consumerPeer.notify('consumerLayersChanged', consumerLayersChangedNotificationData);
     });
 
-    await opts.consumerPeer.request('newConsumer', {
+    const newConsumer: newConsumerRequest = {
       peerId: opts.producerPeer.id,
       producerId: opts.producer.id,
       id: consumer.id,
@@ -306,7 +327,9 @@ class PeerRequestHandler {
       type: consumer.type,
       appData: consumer.appData,
       producerPaused: consumer.producerPaused,
-    });
+    };
+
+    await opts.consumerPeer.request('newConsumer', newConsumer);
 
     await consumer.resume();
   }

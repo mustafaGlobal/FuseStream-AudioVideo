@@ -68,6 +68,17 @@ interface produceRequest {
   appData: any;
 }
 
+interface newConsumerRequest {
+  peerId: string;
+  producerId: string;
+  id: string;
+  kind: mediasoupTypes.MediaKind;
+  rtpParameters: mediasoupTypes.RtpParameters;
+  type: 'simple' | 'simulcast' | 'svc' | 'pipe';
+  appData: any;
+  producerPaused: boolean;
+}
+
 interface closeProducerRequest {
   producerId: string;
 }
@@ -114,8 +125,45 @@ interface Response {
 
 interface Notification {
   type: MsgType.Notification;
-  method: string;
+  method: Method;
   data: any;
+}
+
+interface newPeerNotification {
+  id: string;
+  displayName: string;
+  device: any;
+}
+
+interface peerClosedNotification {
+  peerId: string;
+}
+
+interface consumerClosedNotification {
+  peerId: string;
+  consumerId: string;
+}
+
+interface consumerClosedNotification {
+  peerId: string;
+  consumerId: string;
+}
+
+interface consumerPausedNotification {
+  peerId: string;
+  consumerId: string;
+}
+
+interface consumerResumedNotification {
+  peerId: string;
+  consumerId: string;
+}
+
+interface consumerLayersChangedNotification {
+  peerId: string;
+  consumerId: string;
+  spatialLayer?: number | null;
+  temporalLayer?: number | null;
 }
 
 type WebSocketMessage = Request | Response | Notification;
@@ -129,6 +177,7 @@ export type {
   closeProducerRequest,
   pauseProducerRequest,
   resumeProducerRequest,
+  newConsumerRequest,
   pauseConsumerRequest,
   resumeConsumerRequest,
   setConsumerPreferredLayersRequest,
@@ -141,5 +190,11 @@ export type {
   Request,
   Response,
   Notification,
+  newPeerNotification,
+  peerClosedNotification,
+  consumerClosedNotification,
+  consumerPausedNotification,
+  consumerResumedNotification,
+  consumerLayersChangedNotification,
 };
 export { MsgType };
