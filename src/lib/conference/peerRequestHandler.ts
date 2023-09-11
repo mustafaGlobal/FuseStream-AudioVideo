@@ -9,14 +9,19 @@ import {
   consumerLayersChangedNotification,
   consumerPausedNotification,
   createWebRtcTransportRequest,
+  createWebRtcTransportResponse,
+  getRouterRtpCapabilitiesResponse,
   joinRequest,
+  joinResponse,
   newConsumerRequest,
   newPeerNotification,
   pauseConsumerRequest,
   pauseProducerRequest,
   produceRequest,
+  produceResponse,
   requestConsumerKeyFrameRequest,
   restartIceRequest,
+  restartIceResponse,
   resumeConsumerRequest,
   resumeProducerRequest,
   setConsumerPreferredLayersRequest,
@@ -48,70 +53,83 @@ class PeerRequestHandler {
         this.getRouterRtpCapabilities();
         break;
 
-      case 'createWebRtcTransport':
-        const createWebRtcTransportReq: createWebRtcTransportRequest = this.request.data;
-        this.createWebRtcTransport(createWebRtcTransportReq);
+      case 'createWebRtcTransport': {
+        const req: createWebRtcTransportRequest = this.request.data;
+        this.createWebRtcTransport(req);
         break;
+      }
 
-      case 'connectWebRtcTransport':
-        const connectWebRtcTransportReq: connectWebRtcTransportRequest = this.request.data;
-        this.connectWebRtcTransport(connectWebRtcTransportReq);
+      case 'connectWebRtcTransport': {
+        const req: connectWebRtcTransportRequest = this.request.data;
+        this.connectWebRtcTransport(req);
         break;
+      }
 
-      case 'restartIce':
+      case 'restartIce': {
         const restartIceReq: restartIceRequest = this.request.data;
         this.restartIce(restartIceReq);
         break;
+      }
 
-      case 'join':
-        const joinReq: joinRequest = this.request.data;
-        this.join(joinReq);
+      case 'join': {
+        const req: joinRequest = this.request.data;
+        this.join(req);
         break;
+      }
 
-      case 'produce':
-        const produceReq: produceRequest = this.request.data;
-        this.produce(produceReq);
+      case 'produce': {
+        const req: produceRequest = this.request.data;
+        this.produce(req);
         break;
+      }
 
-      case 'closeProducer':
-        const closeProducerReq: closeProducerRequest = this.request.data;
-        this.closeProducer(closeProducerReq);
+      case 'closeProducer': {
+        const req: closeProducerRequest = this.request.data;
+        this.closeProducer(req);
         break;
+      }
 
-      case 'pauseProducer':
-        const pauseProducerReq: pauseProducerRequest = this.request.data;
-        this.pauseProducer(pauseProducerReq);
+      case 'pauseProducer': {
+        const req: pauseProducerRequest = this.request.data;
+        this.pauseProducer(req);
         break;
+      }
 
-      case 'resumeProducer':
-        const resumeProducerReq: resumeProducerRequest = this.request.data;
-        this.resumeProducer(resumeProducerReq);
+      case 'resumeProducer': {
+        const req: resumeProducerRequest = this.request.data;
+        this.resumeProducer(req);
         break;
+      }
 
-      case 'pauseConsumer':
-        const pauseConsumerReq: pauseConsumerRequest = this.request.data;
-        this.pauseConsumer(pauseConsumerReq);
+      case 'pauseConsumer': {
+        const req: pauseConsumerRequest = this.request.data;
+        this.pauseConsumer(req);
         break;
+      }
 
-      case 'resumeConsumer':
-        const resumeConsumerReq: resumeConsumerRequest = this.request.data;
-        this.resumeConsumer(resumeConsumerReq);
+      case 'resumeConsumer': {
+        const req: resumeConsumerRequest = this.request.data;
+        this.resumeConsumer(req);
         break;
+      }
 
-      case 'setConsumerPreferredLayers':
-        const setConsumerPreferredLayersReq: setConsumerPreferredLayersRequest = this.request.data;
-        this.setConsumerPreferredLayers(setConsumerPreferredLayersReq);
+      case 'setConsumerPreferredLayers': {
+        const req: setConsumerPreferredLayersRequest = this.request.data;
+        this.setConsumerPreferredLayers(req);
         break;
+      }
 
-      case 'setConsumerPriority':
-        const setConsumerPriorityReq: setConsumerPriorityRequest = this.request.data;
-        this.setConsumerPriority(setConsumerPriorityReq);
+      case 'setConsumerPriority': {
+        const req: setConsumerPriorityRequest = this.request.data;
+        this.setConsumerPriority(req);
         break;
+      }
 
-      case 'requestConsumerKeyFrame':
-        const requestConsumerKeyFrameReq: requestConsumerKeyFrameRequest = this.request.data;
-        this.requestConsumerKeyFrame(requestConsumerKeyFrameReq);
+      case 'requestConsumerKeyFrame': {
+        const req: requestConsumerKeyFrameRequest = this.request.data;
+        this.requestConsumerKeyFrame(req);
         break;
+      }
 
       default:
         this.unsupportedRequest();
@@ -124,7 +142,8 @@ class PeerRequestHandler {
   }
 
   private getRouterRtpCapabilities() {
-    this.accept(this.conference.getRouterRtpCapabilities());
+    const response: getRouterRtpCapabilitiesResponse = this.conference.getRouterRtpCapabilities();
+    this.accept(response);
   }
 
   private async createWebRtcTransport(request: createWebRtcTransportRequest) {
@@ -168,12 +187,14 @@ class PeerRequestHandler {
       }
     }
 
-    this.accept({
+    const response: createWebRtcTransportResponse = {
       id: transport.id,
       iceParameters: transport.iceParameters,
       iceCandidates: transport.iceCandidates,
       dtlsParamters: transport.dtlsParameters,
-    });
+    };
+
+    this.accept(response);
   }
 
   private async connectWebRtcTransport(request: connectWebRtcTransportRequest) {
@@ -194,8 +215,11 @@ class PeerRequestHandler {
       return;
     }
     const iceParameters = await transport.restartIce();
+    const response: restartIceResponse = {
+      iceParameters: iceParameters,
+    };
 
-    this.accept({ iceParameters: iceParameters });
+    this.accept(response);
   }
 
   private join(request: joinRequest) {
@@ -220,7 +244,11 @@ class PeerRequestHandler {
       };
     });
 
-    this.accept({ peers: peerInfo });
+    const response: joinResponse = {
+      peers: peerInfo,
+    };
+
+    this.accept(response);
 
     for (const producerPeer of conferenceParticipants) {
       for (const producer of producerPeer.data.producers.values()) {
@@ -334,7 +362,7 @@ class PeerRequestHandler {
     await consumer.resume();
   }
 
-  private async produce(request: produceRequest) {
+  private async produce(request: produceRequest): Promise<void> {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;
@@ -363,7 +391,11 @@ class PeerRequestHandler {
 
     this.peer.data.producers.set(producer.id, producer);
 
-    this.accept({ id: producer.id });
+    // Return response
+    const response: produceResponse = {
+      producerId: producer.id,
+    };
+    this.accept(response);
 
     //create consumers for producer
     for (const p of this.conference.getJoinedPeersExcluding(this.peer.id)) {
