@@ -5,7 +5,7 @@ import url from 'node:url';
 
 import { createLogger } from './lib/logger';
 
-import { WebSocketServer, Room, Message, WebSocketTransport } from './lib/ws-room-server';
+import { WebSocketServer } from './lib/ws-room-server';
 import { config } from './config';
 import { ConferenceManager } from './lib/conference/conferenceManager';
 

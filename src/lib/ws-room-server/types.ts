@@ -1,5 +1,17 @@
 import { types as mediasoupTypes } from 'mediasoup';
 
+interface Device {
+  flag: string;
+  name: string;
+  version: string;
+}
+
+interface PeerInfo {
+  id: string;
+  displayName: string;
+  device: Device | null;
+}
+
 type RequestResponseMethod =
   | 'getRouterRtpCapabilities'
   | 'createWebRtcTransport'
@@ -33,115 +45,173 @@ enum MsgType {
   Notification = 2,
 }
 
-interface Request {
-  type: MsgType.Request;
-  method: RequestResponseMethod;
-  id: string;
-  data: any;
-}
-
-interface getRouterRtpCapabilitiesResponse {
-  codecs?: mediasoupTypes.RtpCodecCapability[];
-  headerExtension?: mediasoupTypes.RtpHeaderExtension[];
-}
-
-interface createWebRtcTransportRequest {
+interface CreateWebRtcTransportRequest {
   forceTcp: boolean;
   producing: boolean;
   consuming: boolean;
 }
 
-interface createWebRtcTransportResponse {
-  id: string;
-  iceParameters: mediasoupTypes.IceParameters;
-  iceCandidates: mediasoupTypes.IceCandidate[];
-  dtlsParamters: mediasoupTypes.DtlsParameters;
-}
-
-interface connectWebRtcTransportRequest {
+interface ConnectWebRtcTransportRequest {
   transportId: string;
   dtlsParameters: mediasoupTypes.DtlsParameters;
 }
 
-interface restartIceRequest {
+interface RestartIceRequest {
   transportId: string;
 }
 
-interface restartIceResponse {
-  iceParameters: mediasoupTypes.IceParameters;
-}
-
-interface joinRequest {
+interface JoinRequest {
   displayName: string;
-  device: object;
+  device: Device;
   rtpCapabilites: mediasoupTypes.RtpCapabilities;
 }
 
-interface peerInfo {
-  id: string;
-  displayName: string;
-  device: any;
-}
-
-interface joinResponse {
-  peers: peerInfo[];
-}
-
-interface produceRequest {
+interface ProduceRequest {
   transportId: string;
   kind: mediasoupTypes.MediaKind;
   rtpParameters: mediasoupTypes.RtpParameters;
-  appData: any;
+  appData: mediasoupTypes.AppData;
 }
 
-interface produceResponse {
-  producerId: string;
-}
-
-interface newConsumerRequest {
+interface NewConsumerRequest {
   peerId: string;
   producerId: string;
   id: string;
   kind: mediasoupTypes.MediaKind;
   rtpParameters: mediasoupTypes.RtpParameters;
   type: 'simple' | 'simulcast' | 'svc' | 'pipe';
-  appData: any;
+  appData: mediasoupTypes.AppData;
   producerPaused: boolean;
 }
 
-interface closeProducerRequest {
+interface CloseProducerRequest {
   producerId: string;
 }
 
-interface pauseProducerRequest {
+interface PauseProducerRequest {
   producerId: string;
 }
 
-interface resumeProducerRequest {
+interface ResumeProducerRequest {
   producerId: string;
 }
 
-interface pauseConsumerRequest {
+interface PauseConsumerRequest {
   consumerId: string;
 }
 
-interface resumeConsumerRequest {
+interface ResumeConsumerRequest {
   consumerId: string;
 }
 
-interface setConsumerPreferredLayersRequest {
+interface SetConsumerPreferredLayersRequest {
   consumerId: string;
   spatialLayer: number;
   temporalLayer: number | undefined;
 }
 
-interface setConsumerPriorityRequest {
+interface SetConsumerPriorityRequest {
   consumerId: string;
   priority: number;
 }
 
-interface requestConsumerKeyFrameRequest {
+interface RequestConsumerKeyFrameRequest {
   consumerId: string;
+}
+
+type RequestData =
+  | CreateWebRtcTransportRequest
+  | ConnectWebRtcTransportRequest
+  | RestartIceRequest
+  | JoinRequest
+  | ProduceRequest
+  | NewConsumerRequest
+  | CloseProducerRequest
+  | PauseProducerRequest
+  | ResumeProducerRequest
+  | PauseConsumerRequest
+  | ResumeConsumerRequest
+  | SetConsumerPreferredLayersRequest
+  | SetConsumerPriorityRequest
+  | RequestConsumerKeyFrameRequest;
+
+interface GetRouterRtpCapabilitiesResponse {
+  codecs?: mediasoupTypes.RtpCodecCapability[];
+  headerExtension?: mediasoupTypes.RtpHeaderExtension[];
+}
+
+interface CreateWebRtcTransportResponse {
+  id: string;
+  iceParameters: mediasoupTypes.IceParameters;
+  iceCandidates: mediasoupTypes.IceCandidate[];
+  dtlsParamters: mediasoupTypes.DtlsParameters;
+}
+
+interface RestartIceResponse {
+  iceParameters: mediasoupTypes.IceParameters;
+}
+
+interface JoinResponse {
+  peers: PeerInfo[];
+}
+
+interface ProduceResponse {
+  producerId: string;
+}
+
+type ResponseData =
+  | GetRouterRtpCapabilitiesResponse
+  | CreateWebRtcTransportResponse
+  | RestartIceResponse
+  | JoinResponse
+  | ProduceResponse;
+
+interface NewPeerNotification {
+  id: string;
+  displayName: string;
+  device: Device;
+}
+
+interface PeerClosedNotification {
+  peerId: string;
+}
+
+interface ConsumerClosedNotification {
+  peerId: string;
+  consumerId: string;
+}
+
+interface ConsumerPausedNotification {
+  peerId: string;
+  consumerId: string;
+}
+
+interface ConsumerResumedNotification {
+  peerId: string;
+  consumerId: string;
+}
+
+interface ConsumerLayersChangedNotification {
+  peerId: string;
+  consumerId: string;
+  spatialLayer?: number | null;
+  temporalLayer?: number | null;
+}
+
+type NotificationData =
+  | NewPeerNotification
+  | PeerClosedNotification
+  | ConsumerClosedNotification
+  | ConsumerPausedNotification
+  | ConsumerResumedNotification
+  | ConsumerLayersChangedNotification
+  | Record<string, never>;
+
+interface Request {
+  type: MsgType.Request;
+  method: RequestResponseMethod;
+  id: string;
+  data: RequestData;
 }
 
 interface Response {
@@ -149,75 +219,38 @@ interface Response {
   method: RequestResponseMethod;
   id: string;
   success: boolean;
-  data?: any;
+  data?: ResponseData;
   error?: string;
 }
 
 interface Notification {
   type: MsgType.Notification;
   method: Method;
-  data: any;
-}
-
-interface newPeerNotification {
-  id: string;
-  displayName: string;
-  device: any;
-}
-
-interface peerClosedNotification {
-  peerId: string;
-}
-
-interface consumerClosedNotification {
-  peerId: string;
-  consumerId: string;
-}
-
-interface consumerClosedNotification {
-  peerId: string;
-  consumerId: string;
-}
-
-interface consumerPausedNotification {
-  peerId: string;
-  consumerId: string;
-}
-
-interface consumerResumedNotification {
-  peerId: string;
-  consumerId: string;
-}
-
-interface consumerLayersChangedNotification {
-  peerId: string;
-  consumerId: string;
-  spatialLayer?: number | null;
-  temporalLayer?: number | null;
+  data: NotificationData;
 }
 
 type WebSocketMessage = Request | Response | Notification;
 
 export type {
-  getRouterRtpCapabilitiesResponse,
-  createWebRtcTransportRequest,
-  createWebRtcTransportResponse,
-  connectWebRtcTransportRequest,
-  restartIceRequest,
-  restartIceResponse,
-  joinRequest,
-  joinResponse,
-  produceRequest,
-  produceResponse,
-  closeProducerRequest,
-  pauseProducerRequest,
-  resumeProducerRequest,
-  newConsumerRequest,
-  pauseConsumerRequest,
-  resumeConsumerRequest,
-  setConsumerPreferredLayersRequest,
-  setConsumerPriorityRequest,
-  requestConsumerKeyFrameRequest,
+  GetRouterRtpCapabilitiesResponse,
+  CreateWebRtcTransportRequest,
+  CreateWebRtcTransportResponse,
+  ConnectWebRtcTransportRequest,
+  RestartIceRequest,
+  RestartIceResponse,
+  JoinRequest,
+  JoinResponse,
+  ProduceRequest,
+  ProduceResponse,
+  CloseProducerRequest,
+  PauseProducerRequest,
+  ResumeProducerRequest,
+  NewConsumerRequest,
+  PauseConsumerRequest,
+  ResumeConsumerRequest,
+  SetConsumerPreferredLayersRequest,
+  SetConsumerPriorityRequest,
+  RequestConsumerKeyFrameRequest,
   WebSocketMessage,
   RequestResponseMethod,
   NotificationMethod,
@@ -225,11 +258,15 @@ export type {
   Request,
   Response,
   Notification,
-  newPeerNotification,
-  peerClosedNotification,
-  consumerClosedNotification,
-  consumerPausedNotification,
-  consumerResumedNotification,
-  consumerLayersChangedNotification,
+  NewPeerNotification,
+  PeerClosedNotification,
+  ConsumerClosedNotification,
+  ConsumerPausedNotification,
+  ConsumerResumedNotification,
+  ConsumerLayersChangedNotification,
+  NotificationData,
+  RequestData,
+  ResponseData,
+  PeerInfo,
 };
 export { MsgType };

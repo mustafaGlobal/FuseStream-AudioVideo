@@ -11,10 +11,10 @@ class WorkerPool {
   private currentWorkerIndex: number = 0;
 
   static async create(poolSize: number) {
-    let workers: Array<mediasoupTypes.Worker> = [];
+    const workers: Array<mediasoupTypes.Worker> = [];
 
     for (let i = 0; i < poolSize; i++) {
-      let worker = await mediasoup.createWorker({
+      const worker = await mediasoup.createWorker({
         logLevel: config.mediasoup.worker.logLevel,
         logTags: config.mediasoup.worker.logTags,
         rtcMinPort: config.mediasoup.worker.rtcMinPort,

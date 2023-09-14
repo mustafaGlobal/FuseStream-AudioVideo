@@ -3,29 +3,31 @@ import { ConferenceRoom } from './conferenceRoom';
 import { Peer } from '../ws-room-server';
 import {
   Request,
-  closeProducerRequest,
-  connectWebRtcTransportRequest,
-  consumerClosedNotification,
-  consumerLayersChangedNotification,
-  consumerPausedNotification,
-  createWebRtcTransportRequest,
-  createWebRtcTransportResponse,
-  getRouterRtpCapabilitiesResponse,
-  joinRequest,
-  joinResponse,
-  newConsumerRequest,
-  newPeerNotification,
-  pauseConsumerRequest,
-  pauseProducerRequest,
-  produceRequest,
-  produceResponse,
-  requestConsumerKeyFrameRequest,
-  restartIceRequest,
-  restartIceResponse,
-  resumeConsumerRequest,
-  resumeProducerRequest,
-  setConsumerPreferredLayersRequest,
-  setConsumerPriorityRequest,
+  CloseProducerRequest,
+  ConnectWebRtcTransportRequest,
+  ConsumerClosedNotification,
+  ConsumerLayersChangedNotification,
+  ConsumerPausedNotification,
+  CreateWebRtcTransportRequest,
+  CreateWebRtcTransportResponse,
+  GetRouterRtpCapabilitiesResponse,
+  JoinRequest,
+  JoinResponse,
+  NewConsumerRequest,
+  NewPeerNotification,
+  PauseConsumerRequest,
+  PauseProducerRequest,
+  ProduceRequest,
+  ProduceResponse,
+  RequestConsumerKeyFrameRequest,
+  RestartIceRequest,
+  RestartIceResponse,
+  ResumeConsumerRequest,
+  ResumeProducerRequest,
+  SetConsumerPreferredLayersRequest,
+  SetConsumerPriorityRequest,
+  ResponseData,
+  PeerInfo,
 } from '../ws-room-server/types';
 import { config } from '../../config';
 import { createLogger } from '../logger';
@@ -36,10 +38,16 @@ class PeerRequestHandler {
   private conference: ConferenceRoom;
   private peer: Peer;
   private request: Request;
-  private accept: Function;
-  private reject: Function;
+  private accept: (data?: ResponseData) => void;
+  private reject: (reason: string) => void;
 
-  constructor(conference: ConferenceRoom, peer: Peer, request: Request, accept: Function, reject: Function) {
+  constructor(
+    conference: ConferenceRoom,
+    peer: Peer,
+    request: Request,
+    accept: (data?: ResponseData) => void,
+    reject: (reason: string) => void
+  ) {
     this.conference = conference;
     this.peer = peer;
     this.request = request;
@@ -54,80 +62,67 @@ class PeerRequestHandler {
         break;
 
       case 'createWebRtcTransport': {
-        const req: createWebRtcTransportRequest = this.request.data;
-        this.createWebRtcTransport(req);
+        this.createWebRtcTransport(this.request.data as CreateWebRtcTransportRequest);
         break;
       }
 
       case 'connectWebRtcTransport': {
-        const req: connectWebRtcTransportRequest = this.request.data;
-        this.connectWebRtcTransport(req);
+        this.connectWebRtcTransport(this.request.data as ConnectWebRtcTransportRequest);
         break;
       }
 
       case 'restartIce': {
-        const restartIceReq: restartIceRequest = this.request.data;
-        this.restartIce(restartIceReq);
+        this.restartIce(this.request.data as RestartIceRequest);
         break;
       }
 
       case 'join': {
-        const req: joinRequest = this.request.data;
-        this.join(req);
+        this.join(this.request.data as JoinRequest);
         break;
       }
 
       case 'produce': {
-        const req: produceRequest = this.request.data;
-        this.produce(req);
+        this.produce(this.request.data as ProduceRequest);
         break;
       }
 
       case 'closeProducer': {
-        const req: closeProducerRequest = this.request.data;
-        this.closeProducer(req);
+        this.closeProducer(this.request.data as CloseProducerRequest);
         break;
       }
 
       case 'pauseProducer': {
-        const req: pauseProducerRequest = this.request.data;
-        this.pauseProducer(req);
+        this.pauseProducer(this.request.data as PauseProducerRequest);
         break;
       }
 
       case 'resumeProducer': {
-        const req: resumeProducerRequest = this.request.data;
-        this.resumeProducer(req);
+        this.resumeProducer(this.request.data as ResumeProducerRequest);
         break;
       }
 
       case 'pauseConsumer': {
-        const req: pauseConsumerRequest = this.request.data;
-        this.pauseConsumer(req);
+        this.pauseConsumer(this.request.data as PauseConsumerRequest);
         break;
       }
 
       case 'resumeConsumer': {
-        const req: resumeConsumerRequest = this.request.data;
-        this.resumeConsumer(req);
+        this.resumeConsumer(this.request.data as ResumeConsumerRequest);
         break;
       }
 
       case 'setConsumerPreferredLayers': {
-        const req: setConsumerPreferredLayersRequest = this.request.data;
-        this.setConsumerPreferredLayers(req);
+        this.setConsumerPreferredLayers(this.request.data as SetConsumerPreferredLayersRequest);
         break;
       }
 
       case 'setConsumerPriority': {
-        const req: setConsumerPriorityRequest = this.request.data;
-        this.setConsumerPriority(req);
+        this.setConsumerPriority(this.request.data as SetConsumerPriorityRequest);
         break;
       }
 
       case 'requestConsumerKeyFrame': {
-        const req: requestConsumerKeyFrameRequest = this.request.data;
-        this.requestConsumerKeyFrame(req);
+        this.requestConsumerKeyFrame(this.request.data as RequestConsumerKeyFrameRequest);
         break;
       }
 
@@ -142,12 +137,12 @@ class PeerRequestHandler {
   }
 
   private getRouterRtpCapabilities() {
-    const response: getRouterRtpCapabilitiesResponse = this.conference.getRouterRtpCapabilities();
+    const response: GetRouterRtpCapabilitiesResponse = this.conference.getRouterRtpCapabilities();
     this.accept(response);
   }
 
-  private async createWebRtcTransport(request: createWebRtcTransportRequest) {
-    let transportOptions: mediasoupTypes.WebRtcTransportOptions = {
+  private async createWebRtcTransport(request: CreateWebRtcTransportRequest) {
+    const transportOptions: mediasoupTypes.WebRtcTransportOptions = {
       ...config.mediasoup.webRtcTransport,
       enableTcp: true,
       enableUdp: true,
@@ -187,7 +182,7 @@ class PeerRequestHandler {
       }
     }
 
-    const response: createWebRtcTransportResponse = {
+    const response: CreateWebRtcTransportResponse = {
       id: transport.id,
       iceParameters: transport.iceParameters,
       iceCandidates: transport.iceCandidates,
@@ -197,7 +192,7 @@ class PeerRequestHandler {
     this.accept(response);
   }
 
-  private async connectWebRtcTransport(request: connectWebRtcTransportRequest) {
+  private async connectWebRtcTransport(request: ConnectWebRtcTransportRequest) {
     const transport = this.peer.data.transports.get(request.transportId);
     if (!transport) {
       this.reject(`transport with id=${request.transportId} not found`);
@@ -205,24 +200,24 @@ class PeerRequestHandler {
     }
 
     await transport.connect({ dtlsParameters: request.dtlsParameters });
-    this.accept();
+    this.accept({});
   }
 
-  private async restartIce(request: restartIceRequest) {
+  private async restartIce(request: RestartIceRequest) {
     const transport = this.peer.data.transports.get(request.transportId);
     if (!transport) {
       this.reject(`transport with id=${request.transportId} not found`);
       return;
     }
     const iceParameters = await transport.restartIce();
-    const response: restartIceResponse = {
+    const response: RestartIceResponse = {
       iceParameters: iceParameters,
     };
 
     this.accept(response);
   }
 
-  private join(request: joinRequest) {
+  private join(request: JoinRequest) {
     if (this.peer.data.joined) {
       this.reject('peer already joined');
       return;
@@ -234,9 +229,9 @@ class PeerRequestHandler {
     this.peer.data.rtpCapabilites = request.rtpCapabilites;
 
     // reply to the joining peer with a list of already joined peers
-    let conferenceParticipants = this.conference.getJoinedPeersExcluding(this.peer.id);
+    const conferenceParticipants = this.conference.getJoinedPeersExcluding(this.peer.id);
 
-    let peerInfo = conferenceParticipants.map((p: Peer) => {
+    const peerInfo: PeerInfo[] = conferenceParticipants.map((p: Peer) => {
       return {
         id: p.id,
         displayName: p.data.displayName,
@@ -244,7 +239,7 @@ class PeerRequestHandler {
       };
     });
 
-    const response: joinResponse = {
+    const response: JoinResponse = {
       peers: peerInfo,
     };
 
@@ -262,7 +257,7 @@ class PeerRequestHandler {
 
     // Notify the new Peer to all other Peers.
     for (const otherPeer of this.conference.getJoinedPeersExcluding(this.peer.id)) {
-      const newPeerNotificationData: newPeerNotification = {
+      const newPeerNotificationData: NewPeerNotification = {
         id: this.peer.id,
         displayName: this.peer.data.displayName,
         device: this.peer.data.device,
@@ -312,7 +307,7 @@ class PeerRequestHandler {
 
     consumer.on('producerclose', () => {
       opts.consumerPeer.data.consumers.delete(consumer.id);
-      const consumerClosedNotificationData: consumerClosedNotification = {
+      const consumerClosedNotificationData: ConsumerClosedNotification = {
         peerId: opts.producerPeer.id,
         consumerId: consumer.id,
       };
@@ -320,7 +315,7 @@ class PeerRequestHandler {
     });
 
     consumer.on('producerpause', () => {
-      const consumerPausedNotificationData: consumerPausedNotification = {
+      const consumerPausedNotificationData: ConsumerPausedNotification = {
         peerId: opts.producerPeer.id,
         consumerId: consumer.id,
       };
@@ -328,7 +323,7 @@ class PeerRequestHandler {
     });
 
     consumer.on('producerresume', () => {
-      const consumerResumedNotificationData: consumerPausedNotification = {
+      const consumerResumedNotificationData: ConsumerPausedNotification = {
         peerId: opts.producerPeer.id,
         consumerId: consumer.id,
       };
@@ -336,7 +331,7 @@ class PeerRequestHandler {
     });
 
     consumer.on('layerschange', (layers) => {
-      const consumerLayersChangedNotificationData: consumerLayersChangedNotification = {
+      const consumerLayersChangedNotificationData: ConsumerLayersChangedNotification = {
         peerId: opts.producerPeer.id,
         consumerId: consumer.id,
         spatialLayer: layers ? layers.spatialLayer : null,
@@ -346,7 +341,7 @@ class PeerRequestHandler {
       opts.consumerPeer.notify('consumerLayersChanged', consumerLayersChangedNotificationData);
     });
 
-    const newConsumer: newConsumerRequest = {
+    const newConsumer: NewConsumerRequest = {
       peerId: opts.producerPeer.id,
       producerId: opts.producer.id,
       id: consumer.id,
@@ -362,7 +357,7 @@ class PeerRequestHandler {
     await consumer.resume();
   }
 
-  private async produce(request: produceRequest): Promise<void> {
+  private async produce(request: ProduceRequest): Promise<void> {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;
@@ -392,7 +387,7 @@ class PeerRequestHandler {
     this.peer.data.producers.set(producer.id, producer);
 
     // Return response
-    const response: produceResponse = {
+    const response: ProduceResponse = {
       producerId: producer.id,
     };
     this.accept(response);
@@ -407,7 +402,7 @@ class PeerRequestHandler {
     }
   }
 
-  private closeProducer(request: closeProducerRequest) {
+  private closeProducer(request: CloseProducerRequest) {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;
@@ -425,7 +420,7 @@ class PeerRequestHandler {
     this.accept();
   }
 
-  private async pauseProducer(request: pauseProducerRequest) {
+  private async pauseProducer(request: PauseProducerRequest) {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;
@@ -442,7 +437,7 @@ class PeerRequestHandler {
     this.accept();
   }
 
-  private async resumeProducer(request: resumeProducerRequest) {
+  private async resumeProducer(request: ResumeProducerRequest) {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;
@@ -459,7 +454,7 @@ class PeerRequestHandler {
     this.accept();
   }
 
-  private async pauseConsumer(request: pauseConsumerRequest) {
+  private async pauseConsumer(request: PauseConsumerRequest) {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;
@@ -476,7 +471,7 @@ class PeerRequestHandler {
     this.accept();
   }
 
-  private async resumeConsumer(request: resumeConsumerRequest) {
+  private async resumeConsumer(request: ResumeConsumerRequest) {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;
@@ -493,7 +488,7 @@ class PeerRequestHandler {
     this.accept();
   }
 
-  private async setConsumerPreferredLayers(request: setConsumerPreferredLayersRequest) {
+  private async setConsumerPreferredLayers(request: SetConsumerPreferredLayersRequest) {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;
@@ -510,7 +505,7 @@ class PeerRequestHandler {
     this.accept();
   }
 
-  private async setConsumerPriority(request: setConsumerPriorityRequest) {
+  private async setConsumerPriority(request: SetConsumerPriorityRequest) {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;
@@ -527,7 +522,7 @@ class PeerRequestHandler {
     this.accept();
   }
 
-  private async requestConsumerKeyFrame(request: requestConsumerKeyFrameRequest) {
+  private async requestConsumerKeyFrame(request: RequestConsumerKeyFrameRequest) {
     if (!this.peer.data.joined) {
       this.reject('peer not joined');
       return;

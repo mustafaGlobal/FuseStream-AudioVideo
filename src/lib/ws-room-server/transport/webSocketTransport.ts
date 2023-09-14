@@ -35,7 +35,7 @@ class WebSocketTransport extends SafeEventEmitter {
     }
   }
 
-  public send(message: any): void {
+  public send(message: unknown): void {
     if (this.closed) {
       throw Error('transport closed');
     }
@@ -66,7 +66,7 @@ class WebSocketTransport extends SafeEventEmitter {
         logger.error('connection error event: [error:%s]', error);
       });
 
-      this.ws.addEventListener('message', (raw: any) => {
+      this.ws.addEventListener('message', (raw: WebSocket.MessageEvent) => {
         if (this.closed) {
           return;
         }

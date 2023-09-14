@@ -8,6 +8,9 @@ import type {
   Request,
   Response,
   Notification,
+  NotificationData,
+  RequestData,
+  ResponseData,
 } from '../types';
 import { types as mediasoupTypes } from 'mediasoup';
 import { MsgType } from '../types';
@@ -15,20 +18,36 @@ import { WebSocketTransport } from '../transport/webSocketTransport';
 
 const logger = createLogger('peer');
 
+interface Device {
+  flag: string;
+  name: string;
+  version: string;
+}
+
 interface PeerData {
-  joined: Boolean;
+  joined: boolean;
   displayName: string;
-  device: any;
+  device: Device | null;
   rtpCapabilites: mediasoupTypes.RtpCapabilities | null;
   transports: Map<string, mediasoupTypes.WebRtcTransport>;
   producers: Map<string, mediasoupTypes.Producer>;
   consumers: Map<string, mediasoupTypes.Consumer>;
 }
 
+interface PeerRequest {
+  type: MsgType;
+  id: string;
+  method: RequestResponseMethod;
+  resolve: (data: unknown) => void;
+  reject: (error: Error) => void;
+  timer: NodeJS.Timeout;
+  close: () => void;
+}
+
 class Peer extends SafeEventEmitter {
   private transport: WebSocketTransport;
-  private closed: boolean;
-  private sentRequests: Map<string, any>;
+  private closed: boolean = false;
+  private sentRequests: Map<string, PeerRequest> = new Map();
   private timeout: number = 10000;
   public id: string;
   public data: PeerData;
@@ -37,8 +56,6 @@ class Peer extends SafeEventEmitter {
     super();
     this.id = id;
     this.transport = transport;
-    this.closed = false;
-    this.sentRequests = new Map<string, any>();
 
     this.data = {
       joined: false,
@@ -52,7 +69,7 @@ class Peer extends SafeEventEmitter {
     this.handleTransport();
   }
 
-  public async request(method: RequestResponseMethod, data: any) {
+  public async request(method: RequestResponseMethod, data: RequestData) {
     const request = Message.createRequest(method, data);
 
     logger.debug('request() method:%s, requestId: %s', method, request.id);
@@ -60,11 +77,11 @@ class Peer extends SafeEventEmitter {
     this.transport.send(request);
 
     return new Promise((pResolve, pReject) => {
-      const sentRequest = {
+      const sentRequest: PeerRequest = {
         type: request.type,
         id: request.id,
         method: request.method,
-        resolve: (data: any) => {
+        resolve: (data: unknown) => {
           this.sentRequests.delete(request.id);
           clearTimeout(sentRequest.timer);
           pResolve(data);
@@ -88,7 +105,7 @@ class Peer extends SafeEventEmitter {
     });
   }
 
-  public notify(method: NotificationMethod, data: any) {
+  public notify(method: NotificationMethod, data: NotificationData) {
     const notification = Message.createNotification(method, data);
 
     logger.debug('notify() method:%s notification', method);
@@ -167,7 +184,7 @@ class Peer extends SafeEventEmitter {
       this.emit(
         'request',
         request,
-        (data: any) => {
+        (data: ResponseData) => {
           const response = Message.createSuccessResponse(request, data);
           this.transport.send(response);
         },
@@ -189,9 +206,9 @@ class Peer extends SafeEventEmitter {
     }
 
     if (response.success) {
-      request.resolve(response.data);
+      request?.resolve(response.data);
     } else {
-      request.reject(Error(response.error));
+      request?.reject(Error(response.error));
     }
   }
 

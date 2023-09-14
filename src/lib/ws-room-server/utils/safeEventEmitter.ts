@@ -9,7 +9,7 @@ class SafeEventEmitter extends EventEmitter {
     this.setMaxListeners(Infinity);
   }
 
-  safeEmit(event: string | symbol, ...args: any[]): void {
+  safeEmit(event: string | symbol, ...args: unknown[]): void {
     try {
       this.emit(event, ...args);
     } catch (error) {

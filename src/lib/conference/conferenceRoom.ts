@@ -1,5 +1,5 @@
 import { types as mediasoupTypes } from 'mediasoup';
-import { Request, Response, Notification, peerClosedNotification } from '../ws-room-server/types';
+import { Request, PeerClosedNotification } from '../ws-room-server/types';
 import { Peer, Room, WebSocketTransport } from '../ws-room-server';
 import { config } from '../../config';
 import { EventEmitter } from 'events';
@@ -21,20 +21,16 @@ class ConferenceRoom extends EventEmitter {
   public peerRoom: Room;
 
   static async create(worker: mediasoupTypes.Worker, roomId: string) {
-    try {
-      const { mediaCodecs } = config.mediasoup.router;
+    const { mediaCodecs } = config.mediasoup.router;
 
-      const router = await worker.createRouter({ mediaCodecs });
+    const router = await worker.createRouter({ mediaCodecs });
 
-      const room = new Room(roomId);
-      return new ConferenceRoom({
-        router,
-        room,
-        roomId,
-      });
-    } catch (error) {
-      throw error;
-    }
+    const room = new Room(roomId);
+    return new ConferenceRoom({
+      router,
+      room,
+      roomId,
+    });
   }
 
   constructor({ router, room, roomId }: ConferenceRoomConstructor) {
@@ -88,7 +84,7 @@ class ConferenceRoom extends EventEmitter {
       // if peer was joined notify other peers of his leave
       if (peer.data.joined) {
         this.getJoinedPeersExcluding(peer.id).forEach((p: Peer) => {
-          const peerClosedNotificationData: peerClosedNotification = {
+          const peerClosedNotificationData: PeerClosedNotification = {
             peerId: peer.id,
           };
           p.notify('peerClosed', peerClosedNotificationData);
@@ -106,13 +102,16 @@ class ConferenceRoom extends EventEmitter {
       }
     });
 
-    peer.addListener('request', (request: Request, accept: Function, reject: Function) => {
-      logger.debug('Peer got new request: %o', request);
+    peer.addListener(
+      'request',
+      (request: Request, accept: (data: unknown) => void, reject: (error: string) => void) => {
+        logger.debug('Peer got new request: %o', request);
 
-      const peerRequestHandler = new PeerRequestHandler(this, peer, request, accept, reject);
+        const peerRequestHandler = new PeerRequestHandler(this, peer, request, accept, reject);
 
-      peerRequestHandler.handleRequest();
-    });
+        peerRequestHandler.handleRequest();
+      }
+    );
   }
 
   public close(): void {
