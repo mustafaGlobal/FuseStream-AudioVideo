@@ -3,7 +3,7 @@ import { createLogger } from '../../logger';
 
 const logger = createLogger('safe-event-emmiter');
 
-class SafeEventEmitter extends EventEmitter {
+export default class SafeEventEmitter extends EventEmitter {
   constructor() {
     super();
     this.setMaxListeners(Infinity);
@@ -17,5 +17,3 @@ class SafeEventEmitter extends EventEmitter {
     }
   }
 }
-
-export default SafeEventEmitter;
